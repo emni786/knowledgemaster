@@ -959,18 +959,32 @@ function VirtualLinkList({
     return rows;
   }, [groups, cols, collapsed]);
 
-  const estimateSize = useCallback(
-    (i: number) => (vrows[i]?.kind === "header" ? 40 : view === "grid" ? 200 : 72),
-    [vrows, view],
-  );
+  // Stable refs so estimateSize/getItemKey identity never changes — prevents
+  // the virtualizer from invalidating cached measurements on every render.
+  const vrowsRef = useRef(vrows);
+  vrowsRef.current = vrows;
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
+  const ROW_HEIGHT_LIST = 84;
+  const ROW_HEIGHT_GRID = 188;
+  const HEADER_HEIGHT = 40;
+
+  const estimateSize = useCallback((i: number) => {
+    const r = vrowsRef.current[i];
+    if (!r) return viewRef.current === "grid" ? ROW_HEIGHT_GRID : ROW_HEIGHT_LIST;
+    if (r.kind === "header") return HEADER_HEIGHT;
+    return viewRef.current === "grid" ? ROW_HEIGHT_GRID : ROW_HEIGHT_LIST;
+  }, []);
+
+  const getItemKey = useCallback((i: number) => vrowsRef.current[i].key, []);
 
   const virtualizer = useVirtualizer({
     count: vrows.length,
     getScrollElement: () => scrollParentRef.current,
     estimateSize,
-    overscan: 8,
-    measureElement: (el) => el.getBoundingClientRect().height,
-    getItemKey: (i) => vrows[i].key,
+    overscan: 6,
+    getItemKey,
   });
 
   return (
