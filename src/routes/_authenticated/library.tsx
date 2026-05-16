@@ -132,9 +132,9 @@ function LibraryPage() {
 
   // Debounce search
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(filters.query), 300);
+    const t = setTimeout(() => setDebouncedQuery(searchInput), 250);
     return () => clearTimeout(t);
-  }, [filters.query]);
+  }, [searchInput]);
 
   const linksQuery = useQuery({ queryKey: ["links"], queryFn: fetchLinks, staleTime: 60_000, refetchOnWindowFocus: false });
   const collectionsQuery = useQuery({ queryKey: ["collections-list"], queryFn: fetchCollections, staleTime: 5 * 60_000, refetchOnWindowFocus: false });
