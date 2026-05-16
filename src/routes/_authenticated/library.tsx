@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, memo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -135,8 +135,8 @@ function LibraryPage() {
     return () => clearTimeout(t);
   }, [filters.query]);
 
-  const linksQuery = useQuery({ queryKey: ["links"], queryFn: fetchLinks });
-  const collectionsQuery = useQuery({ queryKey: ["collections-list"], queryFn: fetchCollections });
+  const linksQuery = useQuery({ queryKey: ["links"], queryFn: fetchLinks, staleTime: 60_000, refetchOnWindowFocus: false });
+  const collectionsQuery = useQuery({ queryKey: ["collections-list"], queryFn: fetchCollections, staleTime: 5 * 60_000, refetchOnWindowFocus: false });
   const allLinks = linksQuery.data ?? [];
 
   // Realtime
@@ -928,13 +928,15 @@ function LinkGrid({
   );
 }
 
-function LinkCard({
-  link, index, view, showNumbers, selected, onSelect, onPin, selectMode, isChecked, onCheck,
-}: {
+type LinkCardProps = {
   link: LinkRow; index: number; view: "list" | "grid"; showNumbers: boolean;
   selected: boolean; onSelect: () => void; onPin: (p: boolean) => void;
   selectMode: boolean; isChecked: boolean; onCheck: () => void;
-}) {
+};
+
+const LinkCard = memo(function LinkCard({
+  link, index, view, showNumbers, selected, onSelect, onPin, selectMode, isChecked, onCheck,
+}: LinkCardProps) {
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
   const ago = link.created_at ? formatDistanceToNow(new Date(link.created_at), { addSuffix: true }) : "";
@@ -1037,7 +1039,7 @@ function LinkCard({
       {link.status === "pending" && <AnalysisProgressBar />}
     </div>
   );
-}
+});
 
 function AnalysisProgressBar() {
   return (
