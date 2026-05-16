@@ -1183,11 +1183,17 @@ const LinkCard = memo(function LinkCard({
   const domain = link.domain || getDomain(link.url);
   const ago = link.created_at ? formatDistanceToNow(new Date(link.created_at), { addSuffix: true }) : "";
   const ref = useRef<HTMLElement | null>(null);
+  const [flash, setFlash] = useState(false);
   useEffect(() => {
     if (selected && ref.current) {
       ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      setFlash(false);
+      const raf = requestAnimationFrame(() => setFlash(true));
+      const t = setTimeout(() => setFlash(false), 950);
+      return () => { cancelAnimationFrame(raf); clearTimeout(t); };
     }
   }, [selected]);
+  const flashClass = flash ? "xn-flash" : "";
 
   if (view === "grid") {
     return (
