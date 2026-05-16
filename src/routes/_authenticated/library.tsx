@@ -1004,11 +1004,18 @@ function VirtualLinkList({
 
   // Keep the selected link in view, even when its row is unmounted by the
   // virtualizer (selection change, filter change, view toggle).
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!selected) return;
     const idx = vrows.findIndex((r) => r.kind === "row" && r.items.some((l) => l.id === selected));
     if (idx < 0) return;
-    virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => {
+      virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+    }, 80);
+    return () => {
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    };
   }, [selected, vrows, virtualizer]);
 
   return (
