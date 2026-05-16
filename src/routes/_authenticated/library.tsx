@@ -1044,12 +1044,15 @@ function VirtualFlatList({
   onSelect: (id: string) => void;
   onPin: (id: string, p: boolean) => void;
 }) {
+  const linksRef = useRef(links);
+  linksRef.current = links;
+  const estimateSize = useCallback(() => 84, []);
+  const getItemKey = useCallback((i: number) => linksRef.current[i].id, []);
   const virtualizer = useWindowVirtualizer({
     count: links.length,
-    estimateSize: () => 72,
-    overscan: 8,
-    measureElement: (el) => el.getBoundingClientRect().height,
-    getItemKey: (i) => links[i].id,
+    estimateSize,
+    overscan: 6,
+    getItemKey,
   });
   return (
     <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
@@ -1059,8 +1062,7 @@ function VirtualFlatList({
           <div
             key={l.id}
             data-index={vi.index}
-            ref={virtualizer.measureElement}
-            style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vi.start}px)`, paddingBottom: 8 }}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: vi.size, transform: `translateY(${vi.start}px)`, paddingBottom: 8 }}
           >
             <LinkCard
               link={l}
