@@ -995,8 +995,7 @@ function VirtualLinkList({
           <div
             key={row.key}
             data-index={vi.index}
-            ref={virtualizer.measureElement}
-            style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vi.start}px)` }}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: vi.size, transform: `translateY(${vi.start}px)` }}
           >
             {row.kind === "header" ? (
               <div className={vi.index === 0 ? "pb-2" : "pt-4 pb-2"}>
