@@ -93,6 +93,7 @@ const NAV = [
 function LibraryPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const desktopScrollRef = useRef<HTMLDivElement | null>(null);
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [collapsed, setCollapsed] = useLocalStorage("xn:sidebar-collapsed", false);
   const [view, setView] = useLocalStorage<"list" | "grid">("xn:view", "list");
