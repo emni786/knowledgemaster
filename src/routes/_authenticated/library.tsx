@@ -135,8 +135,8 @@ function LibraryPage() {
     return () => clearTimeout(t);
   }, [filters.query]);
 
-  const linksQuery = useQuery({ queryKey: ["links"], queryFn: fetchLinks });
-  const collectionsQuery = useQuery({ queryKey: ["collections-list"], queryFn: fetchCollections });
+  const linksQuery = useQuery({ queryKey: ["links"], queryFn: fetchLinks, staleTime: 60_000, refetchOnWindowFocus: false });
+  const collectionsQuery = useQuery({ queryKey: ["collections-list"], queryFn: fetchCollections, staleTime: 5 * 60_000, refetchOnWindowFocus: false });
   const allLinks = linksQuery.data ?? [];
 
   // Realtime
