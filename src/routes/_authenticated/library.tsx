@@ -1002,6 +1002,15 @@ function VirtualLinkList({
     getItemKey,
   });
 
+  // Keep the selected link in view, even when its row is unmounted by the
+  // virtualizer (selection change, filter change, view toggle).
+  useEffect(() => {
+    if (!selected) return;
+    const idx = vrows.findIndex((r) => r.kind === "row" && r.items.some((l) => l.id === selected));
+    if (idx < 0) return;
+    virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+  }, [selected, vrows, virtualizer]);
+
   return (
     <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
       {virtualizer.getVirtualItems().map((vi) => {
