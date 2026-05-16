@@ -1039,7 +1039,7 @@ const LinkCard = memo(function LinkCard({
       {link.status === "pending" && <AnalysisProgressBar />}
     </div>
   );
-}
+});
 
 function AnalysisProgressBar() {
   return (
