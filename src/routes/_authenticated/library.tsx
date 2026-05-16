@@ -284,7 +284,7 @@ function LibraryPage() {
     addMut.mutate(fresh);
   }, [allLinks, addMut]);
 
-  const handleExport = (format: "json" | "csv" | "txt") => {
+  const handleExport = useCallback((format: "json" | "csv" | "txt") => {
     const rows = visible;
     if (!rows.length) return toast.error("Nothing to export");
     let blob: Blob;
@@ -317,7 +317,7 @@ function LibraryPage() {
     a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
     toast.success(`Exported ${rows.length} links as ${format.toUpperCase()}`);
-  };
+  }, [visible]);
 
 
   const handleSignOut = async () => {
