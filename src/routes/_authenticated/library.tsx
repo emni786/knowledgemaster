@@ -465,8 +465,8 @@ function LibraryPage() {
           <main className="flex flex-col min-h-screen">
             <CenterToolbar
               ref={searchRef}
-              filters={filters}
-              setFilters={setFilters}
+              query={searchInput}
+              onQueryChange={setSearchInput}
               view={view}
               setView={setView}
               showNumbers={showNumbers}
@@ -475,11 +475,11 @@ function LibraryPage() {
               setSelectMode={setSelectMode}
               onAdd={handleAdd}
               addPending={addMut.isPending}
-              onSmartSearch={() => setSmartOpen(true)}
-              onImport={() => setImportOpen(true)}
+              onSmartSearch={openSmart}
+              onImport={openImport}
               onExport={handleExport}
-              onRefresh={() => linksQuery.refetch()}
-              onOpenFilters={() => setFiltersOpen(true)}
+              onRefresh={refreshLinks}
+              onOpenFilters={openFilters}
             />
 
             <div className="sticky top-[120px] z-10 bg-background/80 backdrop-blur border-b border-border/50 px-6">
