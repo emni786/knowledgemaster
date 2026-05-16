@@ -13,6 +13,7 @@ async function init() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   $("url").textContent = tab?.url ?? "";
   $("save").addEventListener("click", () => save(tab));
+  $("paste").addEventListener("click", pasteFromClipboard);
   $("reset").addEventListener("click", async () => {
     await chrome.storage.local.remove("token");
     location.reload();
