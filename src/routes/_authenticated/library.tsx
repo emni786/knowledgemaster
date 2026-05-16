@@ -1373,12 +1373,38 @@ function EmptyState() {
   );
 }
 
-function SkeletonList() {
+function SkeletonList({ view = "list" }: { view?: "list" | "grid" }) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [count, setCount] = useState(0);
+  const [cols, setCols] = useState(1);
+
+  useEffect(() => {
+    const update = () => {
+      const h = wrapRef.current?.clientHeight || window.innerHeight || 800;
+      const w = window.innerWidth;
+      const nextCols = view === "grid" ? (w >= 1280 ? 3 : w >= 768 ? 2 : 1) : 1;
+      const rowH = view === "grid" ? 188 : 56; // grid card + gap, list row + gap
+      const rows = Math.ceil(h / rowH) + 1; // tiny overscan
+      setCols(nextCols);
+      setCount(rows * nextCols);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [view]);
+
+  const itemClass = view === "grid" ? "h-[176px] rounded-2xl shimmer" : "h-12 rounded-2xl shimmer";
+  const containerClass = view === "grid" ? "grid gap-3" : "space-y-2";
+  const containerStyle =
+    view === "grid" ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined;
+
   return (
-    <div className="space-y-2">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-12 rounded-2xl shimmer" />
-      ))}
+    <div ref={wrapRef} className="h-full">
+      <div className={containerClass} style={containerStyle}>
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className={itemClass} />
+        ))}
+      </div>
     </div>
   );
 }
