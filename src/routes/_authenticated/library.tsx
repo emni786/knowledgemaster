@@ -524,7 +524,7 @@ function LibraryPage() {
 
             <div ref={desktopScrollRef} className="flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
               {linksQuery.isLoading ? (
-                <SkeletonList />
+                <SkeletonList view={view} />
               ) : visible.length === 0 ? (
                 <EmptyState />
               ) : (
