@@ -3,7 +3,7 @@
   "name": "Knowledgemaster — Save link",
   "version": "1.0.0",
   "description": "Save the current tab to your Knowledgemaster library with one click.",
-  "permissions": ["activeTab", "storage", "tabs"],
+  "permissions": ["activeTab", "storage", "tabs", "clipboardRead"],
   "host_permissions": ["https://knowledgemaster.lovable.app/*"],
   "action": {
     "default_popup": "popup.html",
