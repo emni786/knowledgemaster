@@ -559,8 +559,8 @@ function LibraryPage() {
                 <Input
                   placeholder="Search links... (press /)"
                   className="h-9 pl-9 font-mono text-sm"
-                  value={filters.query}
-                  onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                 />
               </div>
               <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => linksQuery.refetch()}>
