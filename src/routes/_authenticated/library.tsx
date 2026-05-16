@@ -1086,11 +1086,18 @@ function VirtualFlatList({
     getItemKey,
   });
 
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!selected) return;
     const idx = links.findIndex((l) => l.id === selected);
     if (idx < 0) return;
-    virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => {
+      virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+    }, 80);
+    return () => {
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    };
   }, [selected, links, virtualizer]);
   return (
     <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
