@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { runInBackground } from "./background";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
