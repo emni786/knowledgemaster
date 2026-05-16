@@ -934,7 +934,22 @@ function VirtualLinkList({
   onPin: (id: string, p: boolean) => void;
 }) {
   const cols = useGridColCount(view);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem("library:collapsedSections");
+      return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("library:collapsedSections", JSON.stringify(collapsed));
+    } catch {
+      // ignore quota/serialization errors
+    }
+  }, [collapsed]);
   const toggleSection = useCallback((s: string) => setCollapsed((c) => ({ ...c, [s]: !c[s] })), []);
 
   const vrows = useMemo<VRow[]>(() => {
