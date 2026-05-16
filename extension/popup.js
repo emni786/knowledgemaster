@@ -56,6 +56,42 @@ async function save(tab) {
   }
 }
 
+async function pasteFromClipboard() {
+  let text;
+  try {
+    text = await navigator.clipboard.readText();
+  } catch {
+    setStatus("Clipboard access denied. Try pasting manually.", "err");
+    return;
+  }
+  const url = (text ?? "").trim();
+  if (!url || !/^https?:\/\//i.test(url)) {
+    setStatus("Clipboard does not contain a valid URL.", "err");
+    return;
+  }
+  $("paste").disabled = true;
+  setStatus("Saving…");
+  try {
+    const { token } = await chrome.storage.local.get("token");
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setStatus(data.error ?? `Error ${res.status}`, "err");
+      $("paste").disabled = false;
+      return;
+    }
+    setStatus(data.duplicate ? "Already in your library." : "Saved to library ✓", "ok");
+    setTimeout(() => window.close(), 900);
+  } catch (e) {
+    setStatus(e.message ?? "Network error", "err");
+    $("paste").disabled = false;
+  }
+}
+
 function setStatus(msg, cls = "") {
   const el = $("status");
   el.textContent = msg;
