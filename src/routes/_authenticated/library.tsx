@@ -1094,14 +1094,20 @@ function VirtualFlatList({
   });
 
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasVisibleRef = useRef(false);
   useEffect(() => {
-    if (!selected) return;
+    if (!selected) { wasVisibleRef.current = false; return; }
     const idx = links.findIndex((l) => l.id === selected);
-    if (idx < 0) return;
+    if (idx < 0) { wasVisibleRef.current = false; return; }
+    const reappeared = !wasVisibleRef.current;
+    wasVisibleRef.current = true;
     if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
     scrollTimerRef.current = setTimeout(() => {
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      virtualizer.scrollToIndex(idx, { align: "auto", behavior: reduced ? "auto" : "smooth" });
+      virtualizer.scrollToIndex(idx, {
+        align: reappeared ? "center" : "auto",
+        behavior: reduced ? "auto" : "smooth",
+      });
     }, 80);
     return () => {
       if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
