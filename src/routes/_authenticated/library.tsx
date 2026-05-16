@@ -1078,6 +1078,13 @@ function VirtualFlatList({
     overscan: 6,
     getItemKey,
   });
+
+  useEffect(() => {
+    if (!selected) return;
+    const idx = links.findIndex((l) => l.id === selected);
+    if (idx < 0) return;
+    virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+  }, [selected, links, virtualizer]);
   return (
     <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
       {virtualizer.getVirtualItems().map((vi) => {
