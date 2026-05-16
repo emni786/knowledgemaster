@@ -521,29 +521,24 @@ function LibraryPage() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
+            <div ref={desktopScrollRef} className="flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
               {linksQuery.isLoading ? (
                 <SkeletonList />
               ) : visible.length === 0 ? (
                 <EmptyState />
               ) : (
-                <div className="space-y-6">
-                  {groups.ready.length > 0 && (
-                    <Section title="Ready" count={groups.ready.length} icon={Sparkles}>
-                      <LinkGrid links={groups.ready} view={view} showNumbers={showNumbers} numberOffset={0} selectMode={selectMode} selectedIds={selectedIds} toggleSelected={toggleSelected} selected={selected} onSelect={handleSelectLink} onPin={(id, p) => pinMut.mutate({ id, pinned: !p })} />
-                    </Section>
-                  )}
-                  {groups.pending.length > 0 && (
-                    <Section title="Pending" count={groups.pending.length} icon={Loader2} iconClass="animate-spin">
-                      <LinkGrid links={groups.pending} view={view} showNumbers={showNumbers} numberOffset={groups.ready.length} selectMode={selectMode} selectedIds={selectedIds} toggleSelected={toggleSelected} selected={selected} onSelect={handleSelectLink} onPin={(id, p) => pinMut.mutate({ id, pinned: !p })} />
-                    </Section>
-                  )}
-                  {groups.failed.length > 0 && (
-                    <Section title="Failed" count={groups.failed.length} icon={AlertCircle} iconClass="text-destructive">
-                      <LinkGrid links={groups.failed} view={view} showNumbers={showNumbers} numberOffset={groups.ready.length + groups.pending.length} selectMode={selectMode} selectedIds={selectedIds} toggleSelected={toggleSelected} selected={selected} onSelect={handleSelectLink} onPin={(id, p) => pinMut.mutate({ id, pinned: !p })} />
-                    </Section>
-                  )}
-                </div>
+                <VirtualLinkList
+                  scrollParentRef={desktopScrollRef}
+                  groups={groups}
+                  view={view}
+                  showNumbers={showNumbers}
+                  selectMode={selectMode}
+                  selectedIds={selectedIds}
+                  toggleSelected={toggleSelected}
+                  selected={selected}
+                  onSelect={handleSelectLink}
+                  onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+                />
               )}
             </div>
           </main>
