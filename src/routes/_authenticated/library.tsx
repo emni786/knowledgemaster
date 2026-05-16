@@ -928,13 +928,15 @@ function LinkGrid({
   );
 }
 
-function LinkCard({
-  link, index, view, showNumbers, selected, onSelect, onPin, selectMode, isChecked, onCheck,
-}: {
+type LinkCardProps = {
   link: LinkRow; index: number; view: "list" | "grid"; showNumbers: boolean;
   selected: boolean; onSelect: () => void; onPin: (p: boolean) => void;
   selectMode: boolean; isChecked: boolean; onCheck: () => void;
-}) {
+};
+
+const LinkCard = memo(function LinkCard({
+  link, index, view, showNumbers, selected, onSelect, onPin, selectMode, isChecked, onCheck,
+}: LinkCardProps) {
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
   const ago = link.created_at ? formatDistanceToNow(new Date(link.created_at), { addSuffix: true }) : "";
