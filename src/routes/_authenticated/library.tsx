@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback, memo, forwardRef } from "react";
+import { useVirtualizer, useWindowVirtualizer } from "@tanstack/react-virtual";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -92,6 +93,7 @@ const NAV = [
 function LibraryPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const desktopScrollRef = useRef<HTMLDivElement | null>(null);
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [collapsed, setCollapsed] = useLocalStorage("xn:sidebar-collapsed", false);
   const [view, setView] = useLocalStorage<"list" | "grid">("xn:view", "list");
@@ -520,29 +522,24 @@ function LibraryPage() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
+            <div ref={desktopScrollRef} className="flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
               {linksQuery.isLoading ? (
                 <SkeletonList />
               ) : visible.length === 0 ? (
                 <EmptyState />
               ) : (
-                <div className="space-y-6">
-                  {groups.ready.length > 0 && (
-                    <Section title="Ready" count={groups.ready.length} icon={Sparkles}>
-                      <LinkGrid links={groups.ready} view={view} showNumbers={showNumbers} numberOffset={0} selectMode={selectMode} selectedIds={selectedIds} toggleSelected={toggleSelected} selected={selected} onSelect={handleSelectLink} onPin={(id, p) => pinMut.mutate({ id, pinned: !p })} />
-                    </Section>
-                  )}
-                  {groups.pending.length > 0 && (
-                    <Section title="Pending" count={groups.pending.length} icon={Loader2} iconClass="animate-spin">
-                      <LinkGrid links={groups.pending} view={view} showNumbers={showNumbers} numberOffset={groups.ready.length} selectMode={selectMode} selectedIds={selectedIds} toggleSelected={toggleSelected} selected={selected} onSelect={handleSelectLink} onPin={(id, p) => pinMut.mutate({ id, pinned: !p })} />
-                    </Section>
-                  )}
-                  {groups.failed.length > 0 && (
-                    <Section title="Failed" count={groups.failed.length} icon={AlertCircle} iconClass="text-destructive">
-                      <LinkGrid links={groups.failed} view={view} showNumbers={showNumbers} numberOffset={groups.ready.length + groups.pending.length} selectMode={selectMode} selectedIds={selectedIds} toggleSelected={toggleSelected} selected={selected} onSelect={handleSelectLink} onPin={(id, p) => pinMut.mutate({ id, pinned: !p })} />
-                    </Section>
-                  )}
-                </div>
+                <VirtualLinkList
+                  scrollParentRef={desktopScrollRef}
+                  groups={groups}
+                  view={view}
+                  showNumbers={showNumbers}
+                  selectMode={selectMode}
+                  selectedIds={selectedIds}
+                  toggleSelected={toggleSelected}
+                  selected={selected}
+                  onSelect={handleSelectLink}
+                  onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+                />
               )}
             </div>
           </main>
@@ -573,16 +570,12 @@ function LibraryPage() {
               <StatCard label="Pending" value={stats.pending} tone="muted" />
             </div>
             {linksQuery.isLoading ? <SkeletonList /> : visible.length === 0 ? <EmptyState /> : (
-              <div className="space-y-2">
-                {visible.map((l, i) => (
-                  <LinkCard
-                    key={l.id} link={l} index={i} view="list" showNumbers={false}
-                    selected={selected === l.id} onSelect={() => handleSelectLink(l.id)}
-                    onPin={(p) => pinMut.mutate({ id: l.id, pinned: !p })}
-                    selectMode={false} isChecked={false} onCheck={() => {}}
-                  />
-                ))}
-              </div>
+              <VirtualFlatList
+                links={visible}
+                selected={selected}
+                onSelect={handleSelectLink}
+                onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+              />
             )}
           </div>
           <Sheet open={mobileDetailOpen} onOpenChange={setMobileDetailOpen}>
@@ -896,6 +889,182 @@ function Section({ title, count, icon: Icon, iconClass, children }: { title: str
       </button>
       {open && children}
     </section>
+  );
+}
+
+type Groups = { ready: LinkRow[]; pending: LinkRow[]; failed: LinkRow[] };
+
+function useGridColCount(view: "list" | "grid") {
+  const [cols, setCols] = useState(() => {
+    if (view === "list") return 1;
+    if (typeof window === "undefined") return 3;
+    if (window.matchMedia("(min-width: 1280px)").matches) return 3;
+    if (window.matchMedia("(min-width: 768px)").matches) return 2;
+    return 1;
+  });
+  useEffect(() => {
+    if (view === "list") { setCols(1); return; }
+    const mq2 = window.matchMedia("(min-width: 768px)");
+    const mq3 = window.matchMedia("(min-width: 1280px)");
+    const update = () => setCols(mq3.matches ? 3 : mq2.matches ? 2 : 1);
+    update();
+    mq2.addEventListener("change", update);
+    mq3.addEventListener("change", update);
+    return () => { mq2.removeEventListener("change", update); mq3.removeEventListener("change", update); };
+  }, [view]);
+  return cols;
+}
+
+type VRow =
+  | { kind: "header"; key: string; title: string; count: number; section: "ready" | "pending" | "failed" }
+  | { kind: "row"; key: string; items: LinkRow[]; offset: number };
+
+function VirtualLinkList({
+  scrollParentRef, groups, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin,
+}: {
+  scrollParentRef: React.RefObject<HTMLDivElement | null>;
+  groups: Groups;
+  view: "list" | "grid";
+  showNumbers: boolean;
+  selectMode: boolean;
+  selectedIds: Set<string>;
+  toggleSelected: (id: string) => void;
+  selected: string | null;
+  onSelect: (id: string) => void;
+  onPin: (id: string, p: boolean) => void;
+}) {
+  const cols = useGridColCount(view);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const toggleSection = useCallback((s: string) => setCollapsed((c) => ({ ...c, [s]: !c[s] })), []);
+
+  const vrows = useMemo<VRow[]>(() => {
+    const rows: VRow[] = [];
+    let offset = 0;
+    const sections: Array<{ key: "ready" | "pending" | "failed"; title: string; links: LinkRow[] }> = [
+      { key: "ready", title: "Ready", links: groups.ready },
+      { key: "pending", title: "Pending", links: groups.pending },
+      { key: "failed", title: "Failed", links: groups.failed },
+    ];
+    for (const s of sections) {
+      if (!s.links.length) continue;
+      rows.push({ kind: "header", key: `h:${s.key}`, title: s.title, count: s.links.length, section: s.key });
+      if (!collapsed[s.key]) {
+        for (let i = 0; i < s.links.length; i += cols) {
+          const chunk = s.links.slice(i, i + cols);
+          rows.push({ kind: "row", key: `r:${s.key}:${i}:${chunk.map((l) => l.id).join(",")}`, items: chunk, offset: offset + i });
+        }
+      }
+      offset += s.links.length;
+    }
+    return rows;
+  }, [groups, cols, collapsed]);
+
+  const estimateSize = useCallback(
+    (i: number) => (vrows[i]?.kind === "header" ? 40 : view === "grid" ? 200 : 72),
+    [vrows, view],
+  );
+
+  const virtualizer = useVirtualizer({
+    count: vrows.length,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize,
+    overscan: 8,
+    measureElement: (el) => el.getBoundingClientRect().height,
+    getItemKey: (i) => vrows[i].key,
+  });
+
+  return (
+    <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
+      {virtualizer.getVirtualItems().map((vi) => {
+        const row = vrows[vi.index];
+        return (
+          <div
+            key={row.key}
+            data-index={vi.index}
+            ref={virtualizer.measureElement}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vi.start}px)` }}
+          >
+            {row.kind === "header" ? (
+              <div className={vi.index === 0 ? "pb-2" : "pt-4 pb-2"}>
+                <button onClick={() => toggleSection(row.section)} className="flex items-center gap-2 group">
+                  {row.section === "ready" && <Sparkles className="h-3.5 w-3.5 text-primary" />}
+                  {row.section === "pending" && <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />}
+                  {row.section === "failed" && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
+                  <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground group-hover:text-primary">{row.title}</span>
+                  <span className="font-mono text-[11px] text-muted-foreground/70">({row.count})</span>
+                </button>
+              </div>
+            ) : (
+              <div
+                className={view === "grid" ? "grid gap-3 pb-3" : "pb-1.5"}
+                style={view === "grid" ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined}
+              >
+                {row.items.map((l, ix) => (
+                  <LinkCard
+                    key={l.id}
+                    link={l}
+                    index={row.offset + ix + 1}
+                    view={view}
+                    showNumbers={showNumbers}
+                    selected={selected === l.id}
+                    onSelect={() => onSelect(l.id)}
+                    onPin={(p) => onPin(l.id, p)}
+                    selectMode={selectMode}
+                    isChecked={selectedIds.has(l.id)}
+                    onCheck={() => toggleSelected(l.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function VirtualFlatList({
+  links, selected, onSelect, onPin,
+}: {
+  links: LinkRow[];
+  selected: string | null;
+  onSelect: (id: string) => void;
+  onPin: (id: string, p: boolean) => void;
+}) {
+  const virtualizer = useWindowVirtualizer({
+    count: links.length,
+    estimateSize: () => 72,
+    overscan: 8,
+    measureElement: (el) => el.getBoundingClientRect().height,
+    getItemKey: (i) => links[i].id,
+  });
+  return (
+    <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
+      {virtualizer.getVirtualItems().map((vi) => {
+        const l = links[vi.index];
+        return (
+          <div
+            key={l.id}
+            data-index={vi.index}
+            ref={virtualizer.measureElement}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vi.start}px)`, paddingBottom: 8 }}
+          >
+            <LinkCard
+              link={l}
+              index={vi.index}
+              view="list"
+              showNumbers={false}
+              selected={selected === l.id}
+              onSelect={() => onSelect(l.id)}
+              onPin={(p) => onPin(l.id, p)}
+              selectMode={false}
+              isChecked={false}
+              onCheck={() => {}}
+            />
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
