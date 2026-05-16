@@ -570,16 +570,12 @@ function LibraryPage() {
               <StatCard label="Pending" value={stats.pending} tone="muted" />
             </div>
             {linksQuery.isLoading ? <SkeletonList /> : visible.length === 0 ? <EmptyState /> : (
-              <div className="space-y-2">
-                {visible.map((l, i) => (
-                  <LinkCard
-                    key={l.id} link={l} index={i} view="list" showNumbers={false}
-                    selected={selected === l.id} onSelect={() => handleSelectLink(l.id)}
-                    onPin={(p) => pinMut.mutate({ id: l.id, pinned: !p })}
-                    selectMode={false} isChecked={false} onCheck={() => {}}
-                  />
-                ))}
-              </div>
+              <VirtualFlatList
+                links={visible}
+                selected={selected}
+                onSelect={handleSelectLink}
+                onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+              />
             )}
           </div>
           <Sheet open={mobileDetailOpen} onOpenChange={setMobileDetailOpen}>
