@@ -632,160 +632,153 @@ function MobileHeader({ email, onAdd, onSignOut }: { email?: string; onAdd: (raw
   );
 }
 
-const CenterToolbar = (() => {
-  const Inner = (
-    {
-      filters, setFilters, view, setView, showNumbers, setShowNumbers,
-      selectMode, setSelectMode, onAdd, addPending, onSmartSearch, onImport, onExport, onRefresh, onOpenFilters,
-    }: {
-      filters: FilterState; setFilters: (f: FilterState) => void;
-      view: "list" | "grid"; setView: (v: "list" | "grid") => void;
-      showNumbers: boolean; setShowNumbers: (v: boolean) => void;
-      selectMode: boolean; setSelectMode: (v: boolean) => void;
-      onAdd: (raw: string) => void; addPending: boolean;
-      onSmartSearch: () => void; onImport: () => void;
-      onExport: (format: "json" | "csv" | "txt") => void;
-      onRefresh: () => void;
-      onOpenFilters: () => void;
-    },
-    ref: React.Ref<HTMLInputElement>,
-  ) => {
-    return (
-      <div className="glass sticky top-0 z-20 border-b border-border/50 px-6 py-3 space-y-3">
-        <AddLinkInput onAdd={onAdd} loading={addPending} />
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              ref={ref}
-              placeholder="Search links... (press /)"
-              className="h-9 pl-9 font-mono text-sm bg-background/60"
-              value={filters.query}
-              onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-            />
-          </div>
-          <div className="flex items-center gap-1 ml-auto">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant={view === "list" ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setView("list")}>
-                  <List className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>List view</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant={view === "grid" ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setView("grid")}>
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Grid view (g)</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant={showNumbers ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setShowNumbers(!showNumbers)}>
-                  <Hash className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Toggle numbers</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant={selectMode ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setSelectMode(!selectMode)}>
-                  <CheckSquare className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Select mode</TooltipContent>
-            </Tooltip>
-            <div className="w-px h-5 bg-border mx-1" />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onSmartSearch}>
-                  <Sparkles className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Smart search</TooltipContent>
-            </Tooltip>
-            <Link to="/discover">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary">
-                    <Compass className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Discover</TooltipContent>
-              </Tooltip>
-            </Link>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={() => toast.success("All links healthy")}>
-                  <Activity className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Link health</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onRefresh}>
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onImport}>
-                  <Upload className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Import</TooltipContent>
-            </Tooltip>
-            <DropdownMenu>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent>Export</TooltipContent>
-              </Tooltip>
-              <DropdownMenuContent align="end" className="font-mono text-xs">
-                <DropdownMenuItem onClick={() => onExport("json")}>Export as JSON</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onExport("csv")}>Export as CSV</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onExport("txt")}>Export as TXT (URLs)</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onOpenFilters}>
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Filters</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  return Object.assign(
-    // eslint-disable-next-line react/display-name
-    (props: Parameters<typeof Inner>[0] & { ref?: React.Ref<HTMLInputElement> }) => Inner(props, props.ref ?? null),
-    { displayName: "CenterToolbar" },
-  );
-})() as unknown as React.ForwardRefExoticComponent<{
-  filters: FilterState; setFilters: (f: FilterState) => void;
-  view: "list" | "grid"; setView: (v: "list" | "grid") => void;
-  showNumbers: boolean; setShowNumbers: (v: boolean) => void;
-  selectMode: boolean; setSelectMode: (v: boolean) => void;
-  onAdd: (raw: string) => void; addPending: boolean;
-  onSmartSearch: () => void; onImport: () => void;
+type CenterToolbarProps = {
+  query: string;
+  onQueryChange: (v: string) => void;
+  view: "list" | "grid";
+  setView: (v: "list" | "grid") => void;
+  showNumbers: boolean;
+  setShowNumbers: (v: boolean) => void;
+  selectMode: boolean;
+  setSelectMode: (v: boolean) => void;
+  onAdd: (raw: string) => void;
+  addPending: boolean;
+  onSmartSearch: () => void;
+  onImport: () => void;
   onExport: (format: "json" | "csv" | "txt") => void;
   onRefresh: () => void;
   onOpenFilters: () => void;
-} & React.RefAttributes<HTMLInputElement>>;
+};
+
+import { forwardRef } from "react";
+
+const CenterToolbar = memo(forwardRef<HTMLInputElement, CenterToolbarProps>(function CenterToolbar(
+  {
+    query, onQueryChange, view, setView, showNumbers, setShowNumbers,
+    selectMode, setSelectMode, onAdd, addPending, onSmartSearch, onImport, onExport, onRefresh, onOpenFilters,
+  },
+  ref,
+) {
+  return (
+    <div className="glass sticky top-0 z-20 border-b border-border/50 px-6 py-3 space-y-3">
+      <AddLinkInput onAdd={onAdd} loading={addPending} />
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-xl">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            ref={ref}
+            placeholder="Search links... (press /)"
+            className="h-9 pl-9 font-mono text-sm bg-background/60"
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-1 ml-auto">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant={view === "list" ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setView("list")}>
+                <List className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>List view</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant={view === "grid" ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setView("grid")}>
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Grid view (g)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant={showNumbers ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setShowNumbers(!showNumbers)}>
+                <Hash className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle numbers</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant={selectMode ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setSelectMode(!selectMode)}>
+                <CheckSquare className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Select mode</TooltipContent>
+          </Tooltip>
+          <div className="w-px h-5 bg-border mx-1" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onSmartSearch}>
+                <Sparkles className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Smart search</TooltipContent>
+          </Tooltip>
+          <Link to="/discover">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary">
+                  <Compass className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Discover</TooltipContent>
+            </Tooltip>
+          </Link>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={() => toast.success("All links healthy")}>
+                <Activity className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Link health</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onRefresh}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Refresh</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onImport}>
+                <Upload className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Import</TooltipContent>
+          </Tooltip>
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Export</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="end" className="font-mono text-xs">
+              <DropdownMenuItem onClick={() => onExport("json")}>Export as JSON</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExport("csv")}>Export as CSV</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExport("txt")}>Export as TXT (URLs)</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onOpenFilters}>
+                <Filter className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Filters</TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    </div>
+  );
+}));
 
 function AddLinkInput({ onAdd, loading }: { onAdd: (raw: string) => void; loading: boolean }) {
   const [val, setVal] = useState("");
