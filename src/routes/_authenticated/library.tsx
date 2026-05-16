@@ -1011,7 +1011,8 @@ function VirtualLinkList({
     if (idx < 0) return;
     if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
     scrollTimerRef.current = setTimeout(() => {
-      virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      virtualizer.scrollToIndex(idx, { align: "auto", behavior: reduced ? "auto" : "smooth" });
     }, 80);
     return () => {
       if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
@@ -1093,7 +1094,8 @@ function VirtualFlatList({
     if (idx < 0) return;
     if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
     scrollTimerRef.current = setTimeout(() => {
-      virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      virtualizer.scrollToIndex(idx, { align: "auto", behavior: reduced ? "auto" : "smooth" });
     }, 80);
     return () => {
       if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
