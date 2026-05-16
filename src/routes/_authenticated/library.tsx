@@ -363,6 +363,11 @@ function LibraryPage() {
     });
   }, []);
 
+  const openSmart = useCallback(() => setSmartOpen(true), []);
+  const openImport = useCallback(() => setImportOpen(true), []);
+  const openFilters = useCallback(() => setFiltersOpen(true), []);
+  const refreshLinks = useCallback(() => { linksQuery.refetch(); }, [linksQuery]);
+
   return (
     <TooltipProvider delayDuration={300}>
       <div className="min-h-screen bg-background text-foreground">
