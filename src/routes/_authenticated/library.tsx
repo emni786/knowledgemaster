@@ -959,18 +959,32 @@ function VirtualLinkList({
     return rows;
   }, [groups, cols, collapsed]);
 
-  const estimateSize = useCallback(
-    (i: number) => (vrows[i]?.kind === "header" ? 40 : view === "grid" ? 200 : 72),
-    [vrows, view],
-  );
+  // Stable refs so estimateSize/getItemKey identity never changes — prevents
+  // the virtualizer from invalidating cached measurements on every render.
+  const vrowsRef = useRef(vrows);
+  vrowsRef.current = vrows;
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
+  const ROW_HEIGHT_LIST = 84;
+  const ROW_HEIGHT_GRID = 188;
+  const HEADER_HEIGHT = 40;
+
+  const estimateSize = useCallback((i: number) => {
+    const r = vrowsRef.current[i];
+    if (!r) return viewRef.current === "grid" ? ROW_HEIGHT_GRID : ROW_HEIGHT_LIST;
+    if (r.kind === "header") return HEADER_HEIGHT;
+    return viewRef.current === "grid" ? ROW_HEIGHT_GRID : ROW_HEIGHT_LIST;
+  }, []);
+
+  const getItemKey = useCallback((i: number) => vrowsRef.current[i].key, []);
 
   const virtualizer = useVirtualizer({
     count: vrows.length,
     getScrollElement: () => scrollParentRef.current,
     estimateSize,
-    overscan: 8,
-    measureElement: (el) => el.getBoundingClientRect().height,
-    getItemKey: (i) => vrows[i].key,
+    overscan: 6,
+    getItemKey,
   });
 
   return (
@@ -981,8 +995,7 @@ function VirtualLinkList({
           <div
             key={row.key}
             data-index={vi.index}
-            ref={virtualizer.measureElement}
-            style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vi.start}px)` }}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: vi.size, transform: `translateY(${vi.start}px)` }}
           >
             {row.kind === "header" ? (
               <div className={vi.index === 0 ? "pb-2" : "pt-4 pb-2"}>
@@ -1031,12 +1044,15 @@ function VirtualFlatList({
   onSelect: (id: string) => void;
   onPin: (id: string, p: boolean) => void;
 }) {
+  const linksRef = useRef(links);
+  linksRef.current = links;
+  const estimateSize = useCallback(() => 84, []);
+  const getItemKey = useCallback((i: number) => linksRef.current[i].id, []);
   const virtualizer = useWindowVirtualizer({
     count: links.length,
-    estimateSize: () => 72,
-    overscan: 8,
-    measureElement: (el) => el.getBoundingClientRect().height,
-    getItemKey: (i) => links[i].id,
+    estimateSize,
+    overscan: 6,
+    getItemKey,
   });
   return (
     <div style={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
@@ -1046,8 +1062,7 @@ function VirtualFlatList({
           <div
             key={l.id}
             data-index={vi.index}
-            ref={virtualizer.measureElement}
-            style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vi.start}px)`, paddingBottom: 8 }}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: vi.size, transform: `translateY(${vi.start}px)`, paddingBottom: 8 }}
           >
             <LinkCard
               link={l}
@@ -1122,7 +1137,7 @@ const LinkCard = memo(function LinkCard({
         onClick={selectMode ? onCheck : onSelect}
         aria-pressed={selected}
         data-selected={selected ? "true" : undefined}
-        className={`group relative overflow-hidden text-left rounded-2xl border p-3 transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-md -translate-y-0.5" : "border-border/50 bg-card"}`}
+        className={`group relative overflow-hidden text-left rounded-2xl border p-3 h-[176px] transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-md -translate-y-0.5" : "border-border/50 bg-card"}`}
       >
         <div className="flex items-start gap-2 mb-2">
           {selectMode && <Checkbox checked={isChecked} className="mt-1" />}
@@ -1168,7 +1183,7 @@ const LinkCard = memo(function LinkCard({
       aria-selected={selected}
       data-selected={selected ? "true" : undefined}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (selectMode ? onCheck : onSelect)(); } }}
-      className={`group relative overflow-hidden flex items-center gap-3 rounded-2xl border px-3 py-2 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-sm pl-4 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-primary" : "border-border/50 bg-card hover:bg-accent/40"}`}
+      className={`group relative overflow-hidden flex items-center gap-3 rounded-2xl border px-3 h-[76px] cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-sm pl-4 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-primary" : "border-border/50 bg-card hover:bg-accent/40"}`}
     >
       {selectMode && <Checkbox checked={isChecked} />}
       {showNumbers && <span className="font-mono text-[10px] text-muted-foreground w-6 text-right">{index}.</span>}
