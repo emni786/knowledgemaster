@@ -255,7 +255,7 @@ function LibraryPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["links"] }),
   });
 
-  const handleAdd = (raw: string) => {
+  const handleAdd = useCallback((raw: string) => {
     const urls = Array.from(new Set(
       raw.split(/[\s,]+/).map((s) => s.trim()).filter((s) => /^https?:\/\//.test(s))
     ));
@@ -282,7 +282,7 @@ function LibraryPage() {
     }
     if (!fresh.length) return;
     addMut.mutate(fresh);
-  };
+  }, [allLinks, addMut]);
 
   const handleExport = (format: "json" | "csv" | "txt") => {
     const rows = visible;
