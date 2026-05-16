@@ -97,6 +97,7 @@ function LibraryPage() {
   const [view, setView] = useLocalStorage<"list" | "grid">("xn:view", "list");
   const [showNumbers, setShowNumbers] = useLocalStorage("xn:numbers", false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [searchInput, setSearchInput] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState(false);
