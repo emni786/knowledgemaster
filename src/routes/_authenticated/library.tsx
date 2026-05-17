@@ -1213,7 +1213,13 @@ const LinkCard = memo(function LinkCard({
               <span className="font-mono text-[10px] text-muted-foreground truncate">{domain}</span>
               {link.pinned && <Pin className="h-3 w-3 text-primary fill-primary" />}
             </div>
-            <h3 className="font-medium text-sm truncate mt-0.5">{link.title || link.url}</h3>
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="font-medium text-sm truncate mt-0.5 hover:underline"
+              >{link.title || link.url}</a>
           </div>
           <TypeIcon type={link.content_type} className="h-4 w-4 text-primary/70" />
         </div>
