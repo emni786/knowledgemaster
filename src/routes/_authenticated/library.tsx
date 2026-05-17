@@ -1261,7 +1261,13 @@ const LinkCard = memo(function LinkCard({
       <img src={faviconFor(link.url)} alt="" className="h-5 w-5 rounded" loading="lazy" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h3 className="font-medium text-sm truncate">{link.title || link.url}</h3>
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="font-medium text-sm truncate hover:underline"
+          >{link.title || link.url}</a>
           {link.pinned && <Pin className="h-3 w-3 text-primary fill-primary shrink-0" />}
           {link.status === "pending" && <Loader2 className="h-3 w-3 text-muted-foreground animate-spin shrink-0" />}
           {link.status === "failed" && <AlertCircle className="h-3 w-3 text-destructive shrink-0" />}
