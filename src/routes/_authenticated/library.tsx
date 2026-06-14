@@ -1606,7 +1606,7 @@ function EmptyState() {
   );
 }
 
-function SkeletonList({ view = "list" }: { view?: "list" | "grid" }) {
+function SkeletonList({ view = "list" }: { view?: LayoutMode }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [count, setCount] = useState(0);
   const [cols, setCols] = useState(1);
