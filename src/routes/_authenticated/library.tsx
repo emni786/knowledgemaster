@@ -992,23 +992,22 @@ function Section({ title, count, icon: Icon, iconClass, children }: { title: str
 type Groups = { ready: LinkRow[]; pending: LinkRow[]; failed: LinkRow[] };
 
 function useGridColCount(view: LayoutMode) {
-  const [cols, setCols] = useState(() => {
-    if (view === "list") return 1;
+  const compute = useCallback(() => {
+    if (!isMultiColLayout(view)) return 1;
     if (typeof window === "undefined") return 3;
-    if (window.matchMedia("(min-width: 1280px)").matches) return 3;
-    if (window.matchMedia("(min-width: 768px)").matches) return 2;
-    return 1;
-  });
-  useEffect(() => {
-    if (view === "list") { setCols(1); return; }
-    const mq2 = window.matchMedia("(min-width: 768px)");
-    const mq3 = window.matchMedia("(min-width: 1280px)");
-    const update = () => setCols(mq3.matches ? 3 : mq2.matches ? 2 : 1);
-    update();
-    mq2.addEventListener("change", update);
-    mq3.addEventListener("change", update);
-    return () => { mq2.removeEventListener("change", update); mq3.removeEventListener("change", update); };
+    const w = window.innerWidth;
+    if (view === "thumbnails") {
+      return w >= 1536 ? 3 : w >= 900 ? 2 : 1;
+    }
+    return w >= 1280 ? 3 : w >= 768 ? 2 : 1;
   }, [view]);
+  const [cols, setCols] = useState(compute);
+  useEffect(() => {
+    const update = () => setCols(compute());
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [compute]);
   return cols;
 }
 
