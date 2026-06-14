@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import {
   ExternalLink, Hash, Link2, Loader2, Sparkles,
   Search, Clock, Route as RouteIcon, Boxes, BarChart3, X,
+  Orbit, Globe2, Atom, Disc3, Square,
 } from "lucide-react";
 import { faviconFor, getDomain } from "@/lib/url";
 
