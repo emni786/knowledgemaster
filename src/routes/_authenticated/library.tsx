@@ -265,6 +265,17 @@ function LibraryPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const pendingIds = useMemo(() => allLinks.filter((l) => !l.deleted_at && l.status === "pending").map((l) => l.id), [allLinks]);
+
+  const retryPendingMut = useMutation({
+    mutationFn: () => retryPendingAnalysis(pendingIds),
+    onSuccess: (count) => {
+      qc.invalidateQueries({ queryKey: ["links"] });
+      toast.success(`Re-analyzing ${count} pending link${count === 1 ? "" : "s"}`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const handleAdd = useCallback((raw: string) => {
     const urls = Array.from(new Set(
       raw.split(/[\s,]+/).map((s) => s.trim()).filter((s) => /^https?:\/\//.test(s))
