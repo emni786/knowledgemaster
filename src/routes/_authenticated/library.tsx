@@ -1259,9 +1259,30 @@ type LinkCardProps = {
   selectMode: boolean; isChecked: boolean; onCheck: () => void;
 };
 
+const MORPHS = ["glass", "neu", "clay", "skeu", "aurora", "holo", "paper", "metal"] as const;
+function hashStr(s: string) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function deriveMorph(id: string, index: number) {
+  const h = hashStr(id || String(index));
+  // index*3 offset guarantees adjacent items with similar hashes still diverge
+  const style = MORPHS[(h + index * 3) % MORPHS.length];
+  const hue = h % 360;
+  const radius = 14 + ((h >> 3) % 5) * 4; // 14, 18, 22, 26, 30
+  const tilt = ((h >> 7) % 7) - 3; // -3..+3 deg subtle accent
+  return { style, hue, radius, tilt };
+}
+
 const LinkCard = memo(function LinkCard({
   link, index, view, showNumbers, selected, onSelect, onPin, onRetry, selectMode, isChecked, onCheck,
 }: LinkCardProps) {
+  const morph = useMemo(() => deriveMorph(link.id, index), [link.id, index]);
+  const morphStyle = {
+    ["--card-accent" as string]: String(morph.hue),
+    ["--card-radius" as string]: `${morph.radius}px`,
+  } as React.CSSProperties;
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
   const ago = link.created_at ? formatDistanceToNow(new Date(link.created_at), { addSuffix: true }) : "";
@@ -1283,10 +1304,12 @@ const LinkCard = memo(function LinkCard({
       <button
         ref={ref as React.RefObject<HTMLButtonElement>}
         data-link-card
+        data-morph={morph.style}
+        style={morphStyle}
         onClick={selectMode ? onCheck : onSelect}
         aria-pressed={selected}
         data-selected={selected ? "true" : undefined}
-        className={`group relative overflow-hidden text-left rounded-2xl border p-4 h-[196px] transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-md -translate-y-0.5" : "border-border/50 bg-card"} ${flashClass}`}
+        className={`group relative overflow-hidden text-left border p-4 h-[196px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-0.5" : "border-border/50"} ${flashClass}`}
       >
         <div className="flex items-start gap-2.5">
           {selectMode && <Checkbox checked={isChecked} className="mt-0.5" />}
@@ -1344,13 +1367,15 @@ const LinkCard = memo(function LinkCard({
     <div
       ref={ref as React.RefObject<HTMLDivElement>}
       data-link-row
+      data-morph={morph.style}
+      style={morphStyle}
       onClick={selectMode ? onCheck : onSelect}
       role="button"
       tabIndex={0}
       aria-selected={selected}
       data-selected={selected ? "true" : undefined}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (selectMode ? onCheck : onSelect)(); } }}
-      className={`group relative overflow-hidden flex items-center gap-3 rounded-2xl border px-3.5 h-[72px] cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-sm pl-4 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-primary" : "border-border/50 bg-card hover:bg-accent/40"} ${flashClass}`}
+      className={`group relative overflow-hidden flex items-center gap-3 border px-3.5 h-[72px] cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 pl-4 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-primary" : "border-border/50"} ${flashClass}`}
     >
       {selectMode && <Checkbox checked={isChecked} />}
       {showNumbers && <span className="font-mono text-[10px] text-muted-foreground w-6 text-right shrink-0">{index}.</span>}
