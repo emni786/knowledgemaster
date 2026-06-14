@@ -171,12 +171,18 @@ function TelegramBots() {
         <div className="flex-1">
           <h3 className="font-display text-lg font-semibold">Telegram bot</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Paste any link to your own Telegram bot and Knowledgemaster will analyze it (title, summary) and save it
-            to your library. Create a bot with{" "}
+            Create a bot with{" "}
             <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
               @BotFather <ExternalLink className="h-3 w-3" />
             </a>{" "}
-            and paste the token below.
+            and paste the token below. DM the bot a link and it gets saved.
+            For channels and groups, <strong>add the bot as an admin</strong> (groups need "read all
+            messages" or admin rights, channels need posting/admin). Every new message is then scanned
+            and links are auto-saved to your library.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Telegram does not let bots read history from before they joined — use the JSON backfill
+            below to import older messages from a chat.
           </p>
         </div>
       </div>
