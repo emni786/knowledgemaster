@@ -1223,7 +1223,7 @@ type LinkCardProps = {
 };
 
 const LinkCard = memo(function LinkCard({
-  link, index, view, showNumbers, selected, onSelect, onPin, selectMode, isChecked, onCheck,
+  link, index, view, showNumbers, selected, onSelect, onPin, onRetry, selectMode, isChecked, onCheck,
 }: LinkCardProps) {
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
