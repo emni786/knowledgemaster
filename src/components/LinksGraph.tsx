@@ -198,7 +198,7 @@ export function LinksGraph({ links }: { links: LinkRow[] }) {
                 ctx.fillStyle = "hsl(var(--foreground) / 0.85)";
                 ctx.fillText(label, x, y + r + 3);
               }
-            }}
+            }) as never}
           />
         </Suspense>
       </div>
