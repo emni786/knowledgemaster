@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchLinks } from "@/lib/api/links";
+import { fetchCollections } from "@/lib/api/collections";
 import { AppShell } from "@/components/AppShell";
 import { TopicGraph3D } from "@/components/TopicGraph3D";
 import { PageTabs } from "@/components/PageTabs";
@@ -14,6 +15,8 @@ import {
 import {
   Activity, Link2, Pin, AlertTriangle, TrendingUp, Sparkles, Loader2,
   Rss, Plus, RefreshCw, Trash2, AlertCircle, Boxes, Hash, Network,
+  Library as LibraryIcon, Compass, BarChart3, Newspaper, Settings as SettingsIcon,
+  CheckCircle2, Clock, FolderOpen, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
