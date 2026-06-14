@@ -766,22 +766,58 @@ const CenterToolbar = memo(forwardRef<HTMLInputElement, CenterToolbarProps>(func
           />
         </div>
         <div className="flex items-center gap-1 ml-auto">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant={view === "list" ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setView("list")}>
-                <List className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>List view</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant={view === "grid" ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setView("grid")}>
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Grid view (g)</TooltipContent>
-          </Tooltip>
+          <div className="flex items-center rounded-xl border border-border/50 bg-background/40 p-0.5">
+            {LAYOUTS.filter((l) => PRIMARY_LAYOUTS.includes(l.id)).map((l) => {
+              const Icon = l.icon;
+              return (
+                <Tooltip key={l.id}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={view === l.id ? "secondary" : "ghost"}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setView(l.id)}
+                      aria-label={l.label}
+                      aria-pressed={view === l.id}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{l.label} — {l.desc}</TooltipContent>
+                </Tooltip>
+              );
+            })}
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More layouts">
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>All layouts (g cycles)</TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" className="w-56">
+                {LAYOUTS.map((l) => {
+                  const Icon = l.icon;
+                  return (
+                    <DropdownMenuItem
+                      key={l.id}
+                      onClick={() => setView(l.id)}
+                      className={view === l.id ? "bg-accent/60" : ""}
+                    >
+                      <Icon className="h-4 w-4 mr-2 text-primary/80" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{l.label}</span>
+                        <span className="text-[10px] text-muted-foreground">{l.desc}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant={showNumbers ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setShowNumbers(!showNumbers)}>
