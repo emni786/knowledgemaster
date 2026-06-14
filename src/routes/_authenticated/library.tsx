@@ -1400,11 +1400,11 @@ function hashStr(s: string) {
 }
 function deriveMorph(id: string, index: number) {
   const h = hashStr(id || String(index));
-  // index*3 offset guarantees adjacent items with similar hashes still diverge
   const style = MORPHS[(h + index * 3) % MORPHS.length];
-  // Lightness step 0..4 → mapped to a narrow dark-grey band in CSS (no hue, no chroma)
   const shade = (h >> 5) % 5;
-  return { style, shade };
+  // Random hue 0..359 — color varies per card, lightness stays dark in CSS
+  const hue = h % 360;
+  return { style, shade, hue };
 }
 
 const LinkCard = memo(function LinkCard({
@@ -1413,6 +1413,7 @@ const LinkCard = memo(function LinkCard({
   const morph = useMemo(() => deriveMorph(link.id, index), [link.id, index]);
   const morphStyle = {
     ["--card-shade" as string]: String(morph.shade),
+    ["--card-hue" as string]: String(morph.hue),
   } as React.CSSProperties;
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
