@@ -693,6 +693,9 @@ type CenterToolbarProps = {
   onExport: (format: "json" | "csv" | "txt") => void;
   onRefresh: () => void;
   onOpenFilters: () => void;
+  pendingCount: number;
+  onRetryPending: () => void;
+  retryPendingPending: boolean;
 };
 
 
