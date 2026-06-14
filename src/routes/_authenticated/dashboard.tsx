@@ -368,7 +368,7 @@ function RssFeedsSection() {
         subtitle="Subscribe to feeds and import new entries straight into your library."
       />
 
-      <div className="rounded-2xl border border-border/60 bg-card/40 p-4 space-y-4">
+      <div data-card data-morph="neu" className="rounded-2xl border border-border/60 p-4 space-y-4">
         <form onSubmit={handleAdd} className="flex gap-2">
           <Input
             type="url"
