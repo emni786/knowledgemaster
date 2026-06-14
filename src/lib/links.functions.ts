@@ -134,23 +134,72 @@ async function aiAnalyze(input: { url: string; domain: string | null; meta: { ti
   finally { clearTimeout(t); }
 }
 
+function youtubeVideoId(u: string): string | null {
+  try {
+    const url = new URL(u);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "youtu.be") return url.pathname.slice(1).split("/")[0] || null;
+    if (host.endsWith("youtube.com") || host === "m.youtube.com") {
+      if (url.pathname === "/watch") return url.searchParams.get("v");
+      const m = url.pathname.match(/^\/(shorts|embed|live|v)\/([^/?#]+)/);
+      if (m) return m[2];
+    }
+    return null;
+  } catch { return null; }
+}
+
+async function fetchYoutubeOEmbed(url: string): Promise<{ title: string; author: string; thumbnail: string } | null> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
+    if (!res.ok) return null;
+    const j = (await res.json()) as { title?: string; author_name?: string; thumbnail_url?: string };
+    if (!j.title) return null;
+    return { title: j.title, author: j.author_name ?? "", thumbnail: j.thumbnail_url ?? "" };
+  } catch { return null; }
+  finally { clearTimeout(t); }
+}
+
 async function analyzeOne(url: string): Promise<{ analysis: Analysis; domain: string | null; html_present: boolean }> {
   const domain = getDomain(url);
-  const html = await fetchPage(url);
-  const meta = html ? extractMeta(html) : { title: "", description: "", siteName: "" };
-  const bodyText = html ? stripHtml(html).slice(0, 4000) : "";
+  const ytId = youtubeVideoId(url);
+
+  let html = "";
+  let meta = { title: "", description: "", siteName: "" };
+  let bodyText = "";
+
+  if (ytId) {
+    // YouTube is JS-rendered and unreliable to scrape — use oEmbed for canonical metadata.
+    const oe = await fetchYoutubeOEmbed(url);
+    if (oe) {
+      meta = {
+        title: oe.title,
+        description: oe.author ? `YouTube video by ${oe.author}.` : "",
+        siteName: "YouTube",
+      };
+      bodyText = `YouTube video. Title: ${oe.title}. Channel: ${oe.author}. Video ID: ${ytId}.`;
+    }
+  } else {
+    html = await fetchPage(url);
+    meta = html ? extractMeta(html) : meta;
+    bodyText = html ? stripHtml(html).slice(0, 4000) : "";
+  }
 
   const ai = await aiAnalyze({ url, domain, meta, bodyText });
-  if (ai) return { analysis: ai, domain, html_present: !!html };
+  if (ai) {
+    if (ytId) ai.content_type = "video";
+    return { analysis: ai, domain, html_present: !!html || !!meta.title };
+  }
 
   // Fallback: deterministic but useful
   const fallback: Analysis = {
     title: meta.title || domain || url,
     summary: meta.description || `Saved link from ${domain ?? "the web"}.`,
-    tags: domain ? [domain.split(".")[0].toLowerCase().replace(/[^a-z0-9-]+/g, "-")] : ["uncategorized"],
-    content_type: detectType(url, html),
+    tags: ytId ? ["youtube", "video"] : domain ? [domain.split(".")[0].toLowerCase().replace(/[^a-z0-9-]+/g, "-")] : ["uncategorized"],
+    content_type: ytId ? "video" : detectType(url, html),
   };
-  return { analysis: fallback, domain, html_present: !!html };
+  return { analysis: fallback, domain, html_present: !!html || !!meta.title };
 }
 
 export const analyzeAndSaveLinks = createServerFn({ method: "POST" })
