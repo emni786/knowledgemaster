@@ -408,29 +408,25 @@ export function TopicGraph3D({
           </div>
         )}
 
-        {/* Atomic legend */}
+        {/* Cosmos legend */}
         <aside className="pointer-events-none absolute top-3 right-3 w-[240px] rounded-xl border border-white/10 bg-black/60 backdrop-blur p-3 text-[11px] text-slate-200">
           <div className="flex items-center gap-1.5 font-mono uppercase tracking-widest text-[10px] text-amber-300">
-            <Sparkles className="h-3 w-3" /> Atomic legend
+            <Sparkles className="h-3 w-3" /> Cosmos legend
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Nucleus = Topic</div>
-            <div className="text-slate-400">Bigger nucleus = more links on that topic</div>
+            <div className="font-semibold text-slate-100">Planet size = Link count</div>
+            <div className="text-slate-400">Bigger planet = more links on that topic</div>
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Electrons = Links</div>
-            <div className="text-slate-400">Orbiting around their parent topic</div>
+            <div className="font-semibold text-slate-100">Rings = Activity</div>
+            <div className="text-slate-400">More rings = more saved links</div>
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Shells = Activity</div>
-            <div className="text-slate-400">More shells = more saved links</div>
-          </div>
-          <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Bonds = Relations</div>
+            <div className="font-semibold text-slate-100">Edges = Co-occurrence</div>
             <div className="text-slate-400">Topics appearing together on links</div>
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Color = Element</div>
+            <div className="font-semibold text-slate-100">Color = Tag group</div>
             <div className="mt-1 grid grid-cols-2 gap-y-1 gap-x-2">
               {PLANETS.map((p) => (
                 <div key={p.name} className="flex items-center gap-1.5">
