@@ -570,10 +570,23 @@ function LibraryPage() {
                 <SkeletonList view={view} />
               ) : visible.length === 0 ? (
                 <EmptyState />
-              ) : (
+              ) : isVirtualLayout(view) ? (
                 <VirtualLinkList
                   scrollParentRef={desktopScrollRef}
                   groups={groups}
+                  view={view}
+                  showNumbers={showNumbers}
+                  selectMode={selectMode}
+                  selectedIds={selectedIds}
+                  toggleSelected={toggleSelected}
+                  selected={selected}
+                  onSelect={handleSelectLink}
+                  onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+                  onRetry={(id) => retryMut.mutate(id)}
+                />
+              ) : (
+                <NonVirtualLinkList
+                  links={visible}
                   view={view}
                   showNumbers={showNumbers}
                   selectMode={selectMode}
