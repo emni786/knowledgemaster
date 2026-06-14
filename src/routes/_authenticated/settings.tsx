@@ -42,8 +42,72 @@ function Page() {
         </section>
         <BrowserExtension />
         <TelegramBots />
+        <ChangePassword />
       </main>
     </div>
+  );
+}
+
+function ChangePassword() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (next.length < 6) return toast.error("Password must be at least 6 characters");
+    if (next !== confirm) return toast.error("Passwords don't match");
+    setLoading(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const email = userData.user?.email;
+    if (!email) {
+      setLoading(false);
+      return toast.error("Not signed in");
+    }
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: current });
+    if (signInErr) {
+      setLoading(false);
+      return toast.error("Current password is incorrect");
+    }
+    const { error } = await supabase.auth.updateUser({ password: next });
+    setLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Password updated");
+    setCurrent(""); setNext(""); setConfirm("");
+  };
+
+  return (
+    <section className="rounded-xl border border-border/60 bg-card/40 p-6">
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+          <Lock className="h-5 w-5" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-display text-lg font-semibold">Change password</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Update the password you use to sign in with email.
+          </p>
+        </div>
+      </div>
+      <form onSubmit={submit} className="mt-6 space-y-3 max-w-sm">
+        <div className="space-y-1.5">
+          <Label htmlFor="current_pw" className="text-xs uppercase tracking-wide text-muted-foreground">Current password</Label>
+          <Input id="current_pw" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="new_pw" className="text-xs uppercase tracking-wide text-muted-foreground">New password</Label>
+          <Input id="new_pw" type="password" autoComplete="new-password" minLength={6} value={next} onChange={(e) => setNext(e.target.value)} required />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="confirm_pw" className="text-xs uppercase tracking-wide text-muted-foreground">Confirm new password</Label>
+          <Input id="confirm_pw" type="password" autoComplete="new-password" minLength={6} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+        </div>
+        <Button type="submit" disabled={loading || !current || !next || !confirm}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update password"}
+        </Button>
+      </form>
+    </section>
   );
 }
 
