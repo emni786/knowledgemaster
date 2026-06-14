@@ -144,9 +144,9 @@ function DashboardPage() {
               </Button>
             </Header>
             {collectionsQuery.isLoading ? (
-              <div className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-border/60 bg-card/40">Loading collections…</div>
+              <div data-card data-morph="paper" className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-border/60">Loading collections…</div>
             ) : (collectionsQuery.data ?? []).length === 0 ? (
-              <div className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-dashed border-border/60 bg-card/40">
+              <div data-card data-morph="paper" className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-dashed border-border/60">
                 No collections yet. Create one from the Library to organize related links.
               </div>
             ) : (
@@ -155,7 +155,8 @@ function DashboardPage() {
                   <Link
                     key={c.id}
                     to="/library"
-                    className="group rounded-2xl border border-border/60 bg-card/40 p-4 hover:border-primary/40 hover:bg-card/60 transition-colors"
+                    data-card
+                    className="group rounded-2xl border border-border/60 p-4 hover:border-primary/40 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <FolderOpen className="h-4 w-4 text-primary/70" />
