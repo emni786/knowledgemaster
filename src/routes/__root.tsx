@@ -104,10 +104,15 @@ function RootComponent() {
     return () => subscription.unsubscribe();
   }, [router, queryClient]);
 
+  const matches = router.state.matches;
+  const routeKey = matches[matches.length - 1]?.pathname ?? "/";
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-        <Outlet />
+        <div key={routeKey} className="page-transition">
+          <Outlet />
+        </div>
         {mounted && <Toaster theme="system" position="bottom-right" richColors closeButton />}
       </ThemeProvider>
     </QueryClientProvider>
