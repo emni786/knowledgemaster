@@ -1401,16 +1401,18 @@ const LinkCard = memo(function LinkCard({
           {link.status === "pending" && <Loader2 className="h-3 w-3 text-muted-foreground animate-spin shrink-0" />}
           {link.status === "failed" && <AlertCircle className="h-3 w-3 text-destructive shrink-0" />}
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="font-mono text-[10px] text-muted-foreground truncate">{domain}</span>
+        <div className="flex items-center gap-2 mt-0.5 overflow-hidden">
+          <span className="font-mono text-[10px] text-muted-foreground truncate shrink-0 max-w-[40%]">{domain}</span>
           {link.status === "pending" ? (
-            <span className="font-mono text-[10px] text-muted-foreground">Analyzing…</span>
+            <span className="font-mono text-[10px] text-muted-foreground shrink-0">Analyzing…</span>
           ) : link.status === "failed" ? (
-            <span className="font-mono text-[10px] text-destructive">Analysis failed</span>
+            <span className="font-mono text-[10px] text-destructive shrink-0">Analysis failed</span>
           ) : (
-            link.tags.slice(0, 3).map((t) => (
-              <span key={t} data-tag className="font-mono text-[10px] text-primary/70">{t}</span>
-            ))
+            <div className="hidden sm:flex items-center gap-2 min-w-0 overflow-hidden">
+              {link.tags.slice(0, 3).map((t) => (
+                <span key={t} data-tag className="font-mono text-[10px] text-primary/70 truncate max-w-[110px] shrink-0">{t}</span>
+              ))}
+            </div>
           )}
         </div>
       </div>
