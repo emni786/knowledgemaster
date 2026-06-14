@@ -95,10 +95,10 @@ export const Route = createFileRoute("/api/public/telegram/webhook/$botId")({
         }
 
         const update = await request.json().catch(() => null) as
-          | { message?: { chat?: { id: number }; text?: string; caption?: string; entities?: Array<{ type: string; url?: string }> }; edited_message?: unknown; channel_post?: unknown }
+          | Record<string, unknown>
           | null;
-        const msg = (update?.message ?? (update as Record<string, unknown> | null)?.channel_post ?? (update as Record<string, unknown> | null)?.edited_message) as
-          | { chat?: { id: number }; text?: string; caption?: string; entities?: Array<{ type: string; url?: string }> }
+        const msg = (update?.message ?? update?.channel_post ?? update?.edited_message ?? update?.edited_channel_post) as
+          | { chat?: { id: number; title?: string }; text?: string; caption?: string; entities?: Array<{ type: string; url?: string }>; caption_entities?: Array<{ type: string; url?: string }> }
           | undefined;
         if (!msg) return Response.json({ ok: true });
 
