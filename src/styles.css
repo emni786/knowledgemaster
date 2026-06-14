@@ -350,36 +350,35 @@
 }
 
 /* ============================================================
-   Random Morphism — uniform shape, random dark-grey shades.
-   Every card uses the SAME rounded rectangle; only the surface
-   treatment (shadow, border, hover) and grey shade vary per card.
-   --card-shade is an integer 0..4 chosen from the link id.
+   Random Morphism — uniform shape, randomized DARK tinted shades.
+   Each card gets a random hue (--card-hue 0..359) and one of five
+   lightness steps (--card-shade 0..4), kept in a deep-dark band so
+   the morphism (glass/neu/clay/aurora/etc.) still reads clearly.
    ============================================================ */
 .lib-morph [data-link-card],
 .lib-morph [data-link-row] {
   border-radius: 20px;
-  /* dark-grey palette: 5 evenly spaced shades, all desaturated */
-  --grey-0: oklch(0.20 0.005 270);
-  --grey-1: oklch(0.235 0.006 270);
-  --grey-2: oklch(0.265 0.006 270);
-  --grey-3: oklch(0.295 0.007 270);
-  --grey-4: oklch(0.325 0.007 270);
-  --card-bg:
-    var(--grey-0);
+  /* Dark colored palette — low lightness, modest chroma. Hue is per-card. */
+  --tint-0: oklch(0.20 0.045 var(--card-hue, 270));
+  --tint-1: oklch(0.235 0.050 var(--card-hue, 270));
+  --tint-2: oklch(0.265 0.055 var(--card-hue, 270));
+  --tint-3: oklch(0.295 0.060 var(--card-hue, 270));
+  --tint-4: oklch(0.325 0.065 var(--card-hue, 270));
+  --card-bg: var(--tint-0);
 }
-.lib-morph [style*="--card-shade: 1"] { --card-bg: var(--grey-1); }
-.lib-morph [style*="--card-shade: 2"] { --card-bg: var(--grey-2); }
-.lib-morph [style*="--card-shade: 3"] { --card-bg: var(--grey-3); }
-.lib-morph [style*="--card-shade: 4"] { --card-bg: var(--grey-4); }
+.lib-morph [style*="--card-shade: 1"] { --card-bg: var(--tint-1); }
+.lib-morph [style*="--card-shade: 2"] { --card-bg: var(--tint-2); }
+.lib-morph [style*="--card-shade: 3"] { --card-bg: var(--tint-3); }
+.lib-morph [style*="--card-shade: 4"] { --card-bg: var(--tint-4); }
 
-/* Light theme — invert the grey ramp to soft warm-greys */
+/* Light theme — light tinted pastels mirroring the same hue */
 :root:not(.dark) .lib-morph [data-link-card],
 :root:not(.dark) .lib-morph [data-link-row] {
-  --grey-0: oklch(0.96 0.003 270);
-  --grey-1: oklch(0.945 0.004 270);
-  --grey-2: oklch(0.925 0.004 270);
-  --grey-3: oklch(0.905 0.005 270);
-  --grey-4: oklch(0.885 0.005 270);
+  --tint-0: oklch(0.965 0.022 var(--card-hue, 270));
+  --tint-1: oklch(0.950 0.026 var(--card-hue, 270));
+  --tint-2: oklch(0.930 0.030 var(--card-hue, 270));
+  --tint-3: oklch(0.910 0.034 var(--card-hue, 270));
+  --tint-4: oklch(0.890 0.038 var(--card-hue, 270));
 }
 
 /* Glassmorphism — frosted dark grey */
