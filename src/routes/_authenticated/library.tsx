@@ -28,7 +28,7 @@ import { useLocalStorage } from "@/lib/local-storage";
 import { faviconFor, getDomain, normalizeUrl } from "@/lib/url";
 import {
   fetchLinks, addLinks, updateLink, softDeleteLink, softDeleteMany,
-  togglePin, retryAnalysis, restoreLink, permanentlyDelete, emptyTrash, bulkAddTag,
+  togglePin, retryAnalysis, retryPendingAnalysis, restoreLink, permanentlyDelete, emptyTrash, bulkAddTag,
 } from "@/lib/api/links";
 import { fetchCollections, createCollection, deleteCollection } from "@/lib/api/collections";
 import type { LinkRow, FilterState, ContentType, LinkStatus } from "@/lib/types";
