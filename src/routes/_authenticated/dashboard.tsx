@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { KnowledgePulse } from "@/components/KnowledgePulse";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
@@ -109,6 +110,8 @@ function DashboardPage() {
             <Stat icon={Pin} label="Pinned" value={stats.pinned} loading={isLoading} />
             <Stat icon={AlertTriangle} label="Failed" value={stats.failed} loading={isLoading} tone={stats.failed ? "destructive" : "muted"} />
           </div>
+
+          <KnowledgePulse links={links} />
 
           <section className="space-y-3">
             <Header
