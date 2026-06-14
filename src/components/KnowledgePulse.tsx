@@ -34,7 +34,7 @@ function Ticker({ links }: { links: LinkRow[] }) {
   if (links.length === 0) return null;
   const loop = [...links, ...links];
   return (
-    <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-primary/10 via-card/40 to-primary/10 overflow-hidden">
+    <div data-card data-morph="aurora" className="rounded-2xl border border-border/60 overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-2 border-b border-border/40 text-[10px] font-mono uppercase tracking-widest text-primary">
         <Radio className="h-3 w-3 animate-pulse" /> Live pulse
       </div>
