@@ -170,31 +170,6 @@ function DashboardPage() {
           </section>
 
           <KnowledgePulse links={links} />
-
-          <section className="space-y-3">
-            <Header
-              icon={Activity}
-              title="Knowledge graph"
-              subtitle="Each node is a topic from your library. Edges connect topics that appear on the same link. Click a node to see its links."
-            >
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setClusters((v) => !v)}
-                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    clusters
-                      ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-300"
-                      : "border-border/60 hover:border-primary/40 text-muted-foreground hover:text-foreground"
-                  }`}
-                  title="Recolor planets by connected component"
-                >
-                  <Boxes className="h-3.5 w-3.5" />
-                  Clusters {clusters ? "on" : "off"}
-                </button>
-                <AnalyzeTopicsButton />
-              </div>
-            </Header>
-            <TopicGraph3D links={activeLinks} clusters={clusters} onClustersChange={setClusters} />
-          </section>
         </div>
       )}
 
