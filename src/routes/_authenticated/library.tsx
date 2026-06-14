@@ -1413,6 +1413,7 @@ const LinkCard = memo(function LinkCard({
   const morph = useMemo(() => deriveMorph(link.id, index), [link.id, index]);
   const morphStyle = {
     ["--card-shade" as string]: String(morph.shade),
+    ["--card-hue" as string]: String(morph.hue),
   } as React.CSSProperties;
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
