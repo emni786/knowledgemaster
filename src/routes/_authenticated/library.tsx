@@ -662,10 +662,10 @@ function MobileNav({ onClose }: { onClose: () => void }) {
 function MobileHeader({ email, onAdd, onSignOut }: { email?: string; onAdd: (raw: string) => void; onSignOut: () => void }) {
   const [open, setOpen] = useState(false);
   return (
-    <header className="lg:hidden glass sticky top-0 z-30 border-b border-border/50 px-4 py-3 flex items-center gap-2">
+    <header className="lg:hidden glass sticky top-0 z-30 border-b border-border/50 px-3 sm:px-4 py-2.5 flex items-center gap-1.5 sm:gap-2">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-9 w-9 -ml-1">
+          <Button variant="ghost" size="icon" className="h-9 w-9 -ml-1 shrink-0">
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
@@ -676,12 +676,12 @@ function MobileHeader({ email, onAdd, onSignOut }: { email?: string; onAdd: (raw
       </Sheet>
       <Logo />
       <div className="flex flex-col leading-tight min-w-0 flex-1">
-        <span className="font-mono text-sm font-semibold">Knowledgemaster</span>
-        {email && <span className="text-[10px] text-muted-foreground truncate">{email}</span>}
+        <span className="font-mono text-sm font-semibold truncate">Knowledgemaster</span>
+        {email && <span className="hidden sm:block text-[10px] text-muted-foreground truncate">{email}</span>}
       </div>
       <ThemeToggle />
-      <Link to="/settings"><Button variant="ghost" size="icon" className="h-9 w-9"><Settings className="h-4 w-4" /></Button></Link>
-      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={onSignOut}><LogOut className="h-4 w-4" /></Button>
+      <Link to="/settings" className="hidden xs:inline-flex"><Button variant="ghost" size="icon" className="h-9 w-9 shrink-0"><Settings className="h-4 w-4" /></Button></Link>
+      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-destructive" onClick={onSignOut}><LogOut className="h-4 w-4" /></Button>
     </header>
   );
 }
@@ -1401,16 +1401,18 @@ const LinkCard = memo(function LinkCard({
           {link.status === "pending" && <Loader2 className="h-3 w-3 text-muted-foreground animate-spin shrink-0" />}
           {link.status === "failed" && <AlertCircle className="h-3 w-3 text-destructive shrink-0" />}
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="font-mono text-[10px] text-muted-foreground truncate">{domain}</span>
+        <div className="flex items-center gap-2 mt-0.5 overflow-hidden">
+          <span className="font-mono text-[10px] text-muted-foreground truncate shrink-0 max-w-[40%]">{domain}</span>
           {link.status === "pending" ? (
-            <span className="font-mono text-[10px] text-muted-foreground">Analyzing…</span>
+            <span className="font-mono text-[10px] text-muted-foreground shrink-0">Analyzing…</span>
           ) : link.status === "failed" ? (
-            <span className="font-mono text-[10px] text-destructive">Analysis failed</span>
+            <span className="font-mono text-[10px] text-destructive shrink-0">Analysis failed</span>
           ) : (
-            link.tags.slice(0, 3).map((t) => (
-              <span key={t} data-tag className="font-mono text-[10px] text-primary/70">{t}</span>
-            ))
+            <div className="hidden sm:flex items-center gap-2 min-w-0 overflow-hidden">
+              {link.tags.slice(0, 3).map((t) => (
+                <span key={t} data-tag className="font-mono text-[10px] text-primary/70 truncate max-w-[110px] shrink-0">{t}</span>
+              ))}
+            </div>
           )}
         </div>
       </div>
