@@ -506,6 +506,9 @@ function LibraryPage() {
               onExport={handleExport}
               onRefresh={refreshLinks}
               onOpenFilters={openFilters}
+              pendingCount={pendingIds.length}
+              onRetryPending={() => retryPendingMut.mutate()}
+              retryPendingPending={retryPendingMut.isPending}
             />
 
             <div className="sticky top-[120px] z-10 bg-background/80 backdrop-blur border-b border-border/50 px-6">
