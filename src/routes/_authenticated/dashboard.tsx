@@ -547,7 +547,7 @@ function computeCosmosStats(links: any[], clusters: boolean): CosmosStats {
 function CosmosStatsPanel({ stats, clusters }: { stats: CosmosStats; clusters: boolean }) {
   const maxCount = Math.max(1, ...stats.topTopics.map((t) => t.count));
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-5">
+    <div data-card data-morph="holo" className="rounded-2xl border border-border/60 p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-amber-300" /> Cosmos stats
