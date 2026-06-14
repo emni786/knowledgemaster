@@ -441,7 +441,7 @@ export function TopicGraph3D({
               ref={fgRef}
               width={size.w}
               height={size.h}
-              graphData={{ nodes: displayNodes, links: edges }}
+              graphData={{ nodes: positionedNodes, links: edges }}
               backgroundColor="#02030a"
               nodeLabel={(n: any) => `${n.label} · ${n.count} link${n.count > 1 ? "s" : ""}`}
               nodeThreeObject={(n: any) => buildPlanetObject(n as GNode, highlightSet.has(n.id))}
