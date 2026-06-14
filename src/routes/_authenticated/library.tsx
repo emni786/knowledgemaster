@@ -53,6 +53,26 @@ const TYPE_ICON: Record<ContentType, typeof FileText> = {
   tool: Wrench, thread: MessagesSquare, other: LibraryIcon,
 };
 
+type LayoutMode = "list" | "compact" | "grid" | "thumbnails" | "masonry" | "table" | "cover";
+
+const LAYOUTS: { id: LayoutMode; label: string; icon: typeof List; desc: string }[] = [
+  { id: "list",       label: "List",        icon: List,              desc: "Detailed single-line rows" },
+  { id: "compact",    label: "Compact",     icon: Rows3,             desc: "Dense title-only rows" },
+  { id: "grid",       label: "Grid",        icon: LayoutGrid,        desc: "Uniform card grid" },
+  { id: "thumbnails", label: "Thumbnails",  icon: GalleryThumbnails, desc: "Large preview cards" },
+  { id: "masonry",    label: "Masonry",     icon: Columns3,          desc: "Pinterest-style columns" },
+  { id: "table",      label: "Table",       icon: TableIcon,         desc: "Tabular columns" },
+  { id: "cover",      label: "Cover flow",  icon: GalleryHorizontal, desc: "Horizontal carousel" },
+];
+const PRIMARY_LAYOUTS: LayoutMode[] = ["list", "grid", "masonry", "table"];
+
+const isVirtualLayout = (v: LayoutMode) => v === "list" || v === "compact" || v === "grid" || v === "thumbnails";
+const isMultiColLayout = (v: LayoutMode) => v === "grid" || v === "thumbnails";
+const cycleLayout = (v: LayoutMode): LayoutMode => {
+  const i = LAYOUTS.findIndex((l) => l.id === v);
+  return LAYOUTS[(i + 1) % LAYOUTS.length].id;
+};
+
 const TYPE_DESCRIPTION: Record<ContentType, string> = {
   article: "Article — written post, blog, or news story",
   video: "Video — video content from YouTube, Vimeo, etc.",
