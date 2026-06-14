@@ -1356,6 +1356,15 @@ const LinkCard = memo(function LinkCard({
         )}
       </div>
       <TypeIcon type={link.content_type} className="h-4 w-4 text-primary/70" />
+      {link.status === "pending" && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRetry(); }}
+          className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary"
+          title="Analyze"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+        </button>
+      )}
       <button
         onClick={(e) => { e.stopPropagation(); onPin(link.pinned); }}
         className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary"
