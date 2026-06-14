@@ -1259,9 +1259,30 @@ type LinkCardProps = {
   selectMode: boolean; isChecked: boolean; onCheck: () => void;
 };
 
+const MORPHS = ["glass", "neu", "clay", "skeu", "aurora", "holo", "paper", "metal"] as const;
+function hashStr(s: string) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function deriveMorph(id: string, index: number) {
+  const h = hashStr(id || String(index));
+  // index*3 offset guarantees adjacent items with similar hashes still diverge
+  const style = MORPHS[(h + index * 3) % MORPHS.length];
+  const hue = h % 360;
+  const radius = 14 + ((h >> 3) % 5) * 4; // 14, 18, 22, 26, 30
+  const tilt = ((h >> 7) % 7) - 3; // -3..+3 deg subtle accent
+  return { style, hue, radius, tilt };
+}
+
 const LinkCard = memo(function LinkCard({
   link, index, view, showNumbers, selected, onSelect, onPin, onRetry, selectMode, isChecked, onCheck,
 }: LinkCardProps) {
+  const morph = useMemo(() => deriveMorph(link.id, index), [link.id, index]);
+  const morphStyle = {
+    ["--card-accent" as string]: String(morph.hue),
+    ["--card-radius" as string]: `${morph.radius}px`,
+  } as React.CSSProperties;
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
   const ago = link.created_at ? formatDistanceToNow(new Date(link.created_at), { addSuffix: true }) : "";
