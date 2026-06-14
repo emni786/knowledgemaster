@@ -381,8 +381,34 @@
   --tint-4: oklch(0.890 0.038 var(--card-hue, 270));
 }
 
+/* ============================================================
+   Site-wide cards — every <Card> across the app gets a random
+   dark-tinted morphism via :nth-of-type cycling. Always dark,
+   regardless of light/dark theme (user requested dark-only).
+   ============================================================ */
+.lib-morph [data-card] {
+  border-radius: 18px;
+  color: hsl(var(--card-foreground));
+  --tint-0: oklch(0.20 0.045 var(--card-hue, 270));
+  --tint-1: oklch(0.235 0.050 var(--card-hue, 270));
+  --tint-2: oklch(0.265 0.055 var(--card-hue, 270));
+  --tint-3: oklch(0.295 0.060 var(--card-hue, 270));
+  --tint-4: oklch(0.325 0.065 var(--card-hue, 270));
+  --card-bg: var(--tint-2);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background-position .8s ease, background-color .25s ease;
+}
+.lib-morph [data-card]:nth-of-type(8n+1) { --card-hue: 12;  --card-bg: var(--tint-1); }
+.lib-morph [data-card]:nth-of-type(8n+2) { --card-hue: 48;  --card-bg: var(--tint-2); }
+.lib-morph [data-card]:nth-of-type(8n+3) { --card-hue: 96;  --card-bg: var(--tint-0); }
+.lib-morph [data-card]:nth-of-type(8n+4) { --card-hue: 152; --card-bg: var(--tint-3); }
+.lib-morph [data-card]:nth-of-type(8n+5) { --card-hue: 208; --card-bg: var(--tint-1); }
+.lib-morph [data-card]:nth-of-type(8n+6) { --card-hue: 268; --card-bg: var(--tint-4); }
+.lib-morph [data-card]:nth-of-type(8n+7) { --card-hue: 312; --card-bg: var(--tint-2); }
+.lib-morph [data-card]:nth-of-type(8n+8) { --card-hue: 340; --card-bg: var(--tint-0); }
+
+
 /* Glassmorphism — frosted dark grey */
-.lib-morph [data-morph="glass"] {
+.lib-morph :is([data-morph="glass"], [data-card]:nth-of-type(8n+1)) {
   background:
     linear-gradient(135deg,
       color-mix(in oklab, white 6%, var(--card-bg)),
@@ -393,13 +419,13 @@
     inset 0 1px 0 color-mix(in oklab, white 8%, transparent),
     0 10px 30px -18px rgba(0, 0, 0, 0.55);
 }
-.lib-morph [data-morph="glass"]:hover {
+.lib-morph :is([data-morph="glass"], [data-card]:nth-of-type(8n+1)):hover {
   backdrop-filter: blur(22px) saturate(160%);
   border-color: color-mix(in oklab, white 22%, transparent);
 }
 
 /* Neumorphism — soft extruded grey */
-.lib-morph [data-morph="neu"] {
+.lib-morph :is([data-morph="neu"], [data-card]:nth-of-type(8n+2)) {
   background: var(--card-bg);
   border: 1px solid transparent;
   backdrop-filter: none;
@@ -407,14 +433,14 @@
     6px 6px 16px rgba(0, 0, 0, 0.45),
     -4px -4px 14px color-mix(in oklab, white 5%, transparent);
 }
-.lib-morph [data-morph="neu"]:hover {
+.lib-morph :is([data-morph="neu"], [data-card]:nth-of-type(8n+2)):hover {
   box-shadow:
     9px 9px 22px rgba(0, 0, 0, 0.55),
     -6px -6px 18px color-mix(in oklab, white 7%, transparent);
 }
 
 /* Claymorphism — puffy grey */
-.lib-morph [data-morph="clay"] {
+.lib-morph :is([data-morph="clay"], [data-card]:nth-of-type(8n+3)) {
   background:
     linear-gradient(160deg,
       color-mix(in oklab, white 7%, var(--card-bg)),
@@ -426,12 +452,12 @@
     inset 0 6px 14px color-mix(in oklab, white 8%, transparent),
     0 14px 28px -10px rgba(0, 0, 0, 0.45);
 }
-.lib-morph [data-morph="clay"]:hover {
+.lib-morph :is([data-morph="clay"], [data-card]:nth-of-type(8n+3)):hover {
   transform: translateY(-3px) scale(1.012);
 }
 
 /* Skeuomorphism — pressable grey panel */
-.lib-morph [data-morph="skeu"] {
+.lib-morph :is([data-morph="skeu"], [data-card]:nth-of-type(8n+4)) {
   background:
     linear-gradient(180deg,
       color-mix(in oklab, white 8%, var(--card-bg)),
@@ -444,13 +470,13 @@
     0 2px 0 rgba(0, 0, 0, 0.30),
     0 10px 22px -10px rgba(0, 0, 0, 0.45);
 }
-.lib-morph [data-morph="skeu"]:active {
+.lib-morph :is([data-morph="skeu"], [data-card]:nth-of-type(8n+4)):active {
   transform: translateY(1px);
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
 /* Aurora — subtle moving sheen on grey */
-.lib-morph [data-morph="aurora"] {
+.lib-morph :is([data-morph="aurora"], [data-card]:nth-of-type(8n+5)) {
   background:
     linear-gradient(120deg,
       var(--card-bg),
@@ -463,14 +489,14 @@
   box-shadow: 0 12px 28px -16px rgba(0, 0, 0, 0.55);
   animation: lm-aurora 16s ease infinite;
 }
-.lib-morph [data-morph="aurora"]:hover { animation-duration: 6s; }
+.lib-morph :is([data-morph="aurora"], [data-card]:nth-of-type(8n+5)):hover { animation-duration: 6s; }
 @keyframes lm-aurora {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
 
 /* Holographic — faint cool shimmer on grey */
-.lib-morph [data-morph="holo"] {
+.lib-morph :is([data-morph="holo"], [data-card]:nth-of-type(8n+6)) {
   background:
     linear-gradient(125deg,
       color-mix(in oklab, white 4%, var(--card-bg)),
@@ -485,10 +511,10 @@
     0 12px 28px -16px rgba(0, 0, 0, 0.55);
   transition: background-position 1.2s ease, transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
-.lib-morph [data-morph="holo"]:hover { background-position: 100% 100%; }
+.lib-morph :is([data-morph="holo"], [data-card]:nth-of-type(8n+6)):hover { background-position: 100% 100%; }
 
 /* Paper — layered sheets, flat grey */
-.lib-morph [data-morph="paper"] {
+.lib-morph :is([data-morph="paper"], [data-card]:nth-of-type(8n+7)) {
   background: color-mix(in oklab, white 3%, var(--card-bg));
   border: 1px solid color-mix(in oklab, white 5%, transparent);
   backdrop-filter: none;
@@ -497,7 +523,7 @@
     0 4px 8px -2px rgba(0, 0, 0, 0.35),
     0 16px 24px -12px rgba(0, 0, 0, 0.45);
 }
-.lib-morph [data-morph="paper"]:hover {
+.lib-morph :is([data-morph="paper"], [data-card]:nth-of-type(8n+7)):hover {
   transform: translateY(-4px);
   box-shadow:
     0 2px 2px rgba(0, 0, 0, 0.30),
@@ -506,7 +532,7 @@
 }
 
 /* Metal — brushed grey, sweep on hover */
-.lib-morph [data-morph="metal"] {
+.lib-morph :is([data-morph="metal"], [data-card]:nth-of-type(8n+8)) {
   background:
     linear-gradient(135deg,
       color-mix(in oklab, white 10%, var(--card-bg)),
@@ -522,7 +548,7 @@
     0 12px 28px -16px rgba(0, 0, 0, 0.55);
   transition: background-position .8s ease, transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
-.lib-morph [data-morph="metal"]:hover { background-position: 100% 100%; }
+.lib-morph :is([data-morph="metal"], [data-card]:nth-of-type(8n+8)):hover { background-position: 100% 100%; }
 
 /* Selected state — unified accent ring on top of any morph */
 .lib-morph [data-link-card][data-selected="true"],
@@ -532,7 +558,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lib-morph [data-morph="aurora"],
-  .lib-morph [data-morph="holo"],
-  .lib-morph [data-morph="metal"] { animation: none !important; }
+  .lib-morph :is([data-morph="aurora"], [data-card]:nth-of-type(8n+5)),
+  .lib-morph :is([data-morph="holo"], [data-card]:nth-of-type(8n+6)),
+  .lib-morph :is([data-morph="metal"], [data-card]:nth-of-type(8n+8)) { animation: none !important; }
 }
