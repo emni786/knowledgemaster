@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchLinks } from "@/lib/api/links";
 import { fetchCollections } from "@/lib/api/collections";
 import { AppShell } from "@/components/AppShell";
-import { TopicGraph3D } from "@/components/TopicGraph3D";
+
 import { PageTabs } from "@/components/PageTabs";
 import { analyzeTopics } from "@/lib/insights.functions";
 import {
@@ -78,9 +78,8 @@ function DashboardPage() {
   }, [links]);
 
   const activeLinks = useMemo(() => links.filter((l) => !l.deleted_at), [links]);
-  const [clusters, setClusters] = useState(false);
 
-  const cosmosStats = useMemo(() => computeCosmosStats(activeLinks, clusters), [activeLinks, clusters]);
+  const cosmosStats = useMemo(() => computeCosmosStats(activeLinks, false), [activeLinks]);
 
   const qc = useQueryClient();
   useEffect(() => {
@@ -171,31 +170,6 @@ function DashboardPage() {
           </section>
 
           <KnowledgePulse links={links} />
-
-          <section className="space-y-3">
-            <Header
-              icon={Activity}
-              title="Knowledge graph"
-              subtitle="Each node is a topic from your library. Edges connect topics that appear on the same link. Click a node to see its links."
-            >
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setClusters((v) => !v)}
-                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    clusters
-                      ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-300"
-                      : "border-border/60 hover:border-primary/40 text-muted-foreground hover:text-foreground"
-                  }`}
-                  title="Recolor planets by connected component"
-                >
-                  <Boxes className="h-3.5 w-3.5" />
-                  Clusters {clusters ? "on" : "off"}
-                </button>
-                <AnalyzeTopicsButton />
-              </div>
-            </Header>
-            <TopicGraph3D links={activeLinks} clusters={clusters} onClustersChange={setClusters} />
-          </section>
         </div>
       )}
 
@@ -228,7 +202,7 @@ function DashboardPage() {
           <section className="space-y-3">
 
             <Header icon={Sparkles} title="Cosmos breakdown" subtitle="Top topics, edges, and group composition for your current graph." />
-            <CosmosStatsPanel stats={cosmosStats} clusters={clusters} />
+            <CosmosStatsPanel stats={cosmosStats} clusters={false} />
           </section>
         </div>
       )}
