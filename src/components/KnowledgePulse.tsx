@@ -81,13 +81,13 @@ function Ticker({ links }: { links: LinkRow[] }) {
 function Feed({ links }: { links: LinkRow[] }) {
   if (links.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-8 text-center text-sm text-muted-foreground">
+      <div data-card data-morph="paper" className="rounded-2xl border border-dashed border-border/60 p-8 text-center text-sm text-muted-foreground">
         Your knowledge feed is waiting — save a link to light it up.
       </div>
     );
   }
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40">
+    <div data-card data-morph="glass" className="rounded-2xl border border-border/60">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
         <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-primary" /> Knowledge feed
