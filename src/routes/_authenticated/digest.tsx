@@ -116,7 +116,7 @@ function Page() {
 
           <section className="space-y-3">
             <SectionTitle>Key takeaways</SectionTitle>
-            <ul className="rounded-2xl border border-border/60 bg-card/40 p-5 space-y-2">
+            <ul data-card data-morph="clay" className="rounded-2xl border border-border/60 p-5 space-y-2">
               {digest.takeaways.map((t, i) => (
                 <li key={i} className="flex gap-3 text-sm">
                   <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
