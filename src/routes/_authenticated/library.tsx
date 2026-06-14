@@ -1175,6 +1175,7 @@ function VirtualFlatList({
               selected={selected === l.id}
               onSelect={() => onSelect(l.id)}
               onPin={(p) => onPin(l.id, p)}
+              onRetry={() => {}}
               selectMode={false}
               isChecked={false}
               onCheck={() => {}}
