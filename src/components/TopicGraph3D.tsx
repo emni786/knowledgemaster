@@ -433,22 +433,29 @@ export function TopicGraph3D({
           </div>
         )}
 
-        {/* Cosmos legend */}
-        <aside className="pointer-events-none absolute top-3 right-3 w-[230px] rounded-xl border border-white/10 bg-black/60 backdrop-blur p-3 text-[11px] text-slate-200">
+        {/* Atomic legend */}
+        <aside className="pointer-events-none absolute top-3 right-3 w-[240px] rounded-xl border border-white/10 bg-black/60 backdrop-blur p-3 text-[11px] text-slate-200">
           <div className="flex items-center gap-1.5 font-mono uppercase tracking-widest text-[10px] text-amber-300">
-            <Sparkles className="h-3 w-3" /> Cosmos legend
+            <Sparkles className="h-3 w-3" /> Atomic legend
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Node Size = Link Count</div>
-            <div className="mt-1 flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-500" />
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-slate-400" />
-              <span className="inline-block h-3.5 w-3.5 rounded-full bg-slate-300" />
-              <span className="ml-1 text-slate-400">few → many</span>
-            </div>
+            <div className="font-semibold text-slate-100">Nucleus = Topic</div>
+            <div className="text-slate-400">Bigger nucleus = more links on that topic</div>
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Color = Tag Group</div>
+            <div className="font-semibold text-slate-100">Electrons = Links</div>
+            <div className="text-slate-400">Orbiting around their parent topic</div>
+          </div>
+          <div className="mt-2.5">
+            <div className="font-semibold text-slate-100">Shells = Activity</div>
+            <div className="text-slate-400">More shells = more saved links</div>
+          </div>
+          <div className="mt-2.5">
+            <div className="font-semibold text-slate-100">Bonds = Relations</div>
+            <div className="text-slate-400">Topics appearing together on links</div>
+          </div>
+          <div className="mt-2.5">
+            <div className="font-semibold text-slate-100">Color = Element</div>
             <div className="mt-1 grid grid-cols-2 gap-y-1 gap-x-2">
               {PLANETS.map((p) => (
                 <div key={p.name} className="flex items-center gap-1.5">
@@ -458,15 +465,8 @@ export function TopicGraph3D({
               ))}
             </div>
           </div>
-          <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Rings = Connections</div>
-            <div className="text-slate-400">Brighter rings = more active</div>
-          </div>
-          <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Edges = Co-occurrence</div>
-            <div className="text-slate-400">Tags appearing together on links</div>
-          </div>
         </aside>
+
 
         {/* Bottom toolbar */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full border border-white/10 bg-black/60 backdrop-blur px-2 py-1.5 text-slate-200 text-xs">
