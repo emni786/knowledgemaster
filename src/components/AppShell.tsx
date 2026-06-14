@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import {
   Activity, Compass, BarChart3, Newspaper, Settings,
   Library as LibraryIcon, Menu,
@@ -10,15 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const NAV = [
-  { to: "/library", label: "Library", icon: LibraryIcon },
   { to: "/dashboard", label: "Dashboard", icon: Activity },
+  { to: "/library", label: "Library", icon: LibraryIcon },
   { to: "/discover", label: "Discover", icon: Compass },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/digest", label: "Digest", icon: Newspaper },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
-function NavList({ onNav }: { onNav?: () => void }) {
+function NavList({ collapsed, onNav }: { collapsed?: boolean; onNav?: () => void }) {
   return (
     <nav className="px-2 py-3 space-y-0.5">
       {NAV.map((item) => (
@@ -26,11 +26,12 @@ function NavList({ onNav }: { onNav?: () => void }) {
           key={item.to}
           to={item.to}
           onClick={onNav}
+          title={collapsed ? item.label : undefined}
           className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-primary/10 hover:text-primary transition-colors font-medium text-muted-foreground"
           activeProps={{ className: "bg-primary/10 text-primary" }}
         >
           <item.icon className="h-4 w-4 shrink-0" />
-          <span className="truncate">{item.label}</span>
+          {!collapsed && <span className="truncate">{item.label}</span>}
         </Link>
       ))}
     </nav>
@@ -48,14 +49,27 @@ export function AppShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="lg:grid lg:grid-cols-[260px_1fr] min-h-screen">
+      <div
+        className="lg:grid min-h-screen transition-all duration-300"
+        style={{ gridTemplateColumns: sidebarOpen ? "260px 1fr" : "64px 1fr" }}
+      >
         <aside className="hidden lg:flex border-r border-border/50 bg-sidebar text-sidebar-foreground flex-col h-screen sticky top-0">
-          <div className="p-4 border-b border-border/50">
-            <Wordmark collapsed={false} />
+          <div className="flex items-center gap-2 p-4 border-b border-border/50">
+            {sidebarOpen && <Wordmark collapsed={false} />}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen((v) => !v)}
+              className="h-9 w-9"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
           </div>
-          <NavList />
+          <NavList collapsed={!sidebarOpen} />
           <div className="mt-auto p-3 border-t border-border/50 flex items-center gap-2">
             <ThemeToggle />
           </div>
@@ -71,7 +85,7 @@ export function AppShell({
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-64">
                 <div className="p-4 border-b border-border/50"><Wordmark collapsed={false} /></div>
-                <NavList />
+                <NavList onNav={() => {}} />
               </SheetContent>
             </Sheet>
             <h1 className="text-sm font-semibold tracking-tight">{title}</h1>
