@@ -1380,7 +1380,6 @@ function DetailPanel({
 }: {
   link: LinkRow; onClose: () => void;
   onDelete: (id: string) => void; onPin: (id: string, p: boolean) => void;
-  onRetry: (id: string) => void;
   onRetry: (id: string) => void; onUpdate: (id: string, patch: Partial<LinkRow>) => Promise<void>;
   allLinks: LinkRow[];
 }) {
