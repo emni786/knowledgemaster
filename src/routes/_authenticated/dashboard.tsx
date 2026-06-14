@@ -100,6 +100,7 @@ function DashboardPage() {
       title="Dashboard"
       description="A live, atomic view of your knowledge graph — every domain is a nucleus, every tag an electron in orbit."
     >
+      <div className="lib-morph space-y-8">
       <PageTabs
         value={tab}
         onChange={setTab}
@@ -233,6 +234,7 @@ function DashboardPage() {
       )}
 
       {tab === "feeds" && <RssFeedsSection />}
+      </div>
     </AppShell>
   );
 }
