@@ -211,3 +211,132 @@
 @media (prefers-reduced-motion: reduce) {
   .xn-flash { animation: none; }
 }
+
+/* ============================================================
+   Library: Minimal Glass + Soft Neumorphism Skin
+   Scoped under .lib-morph to avoid leaking to other pages.
+   ============================================================ */
+.lib-morph {
+  --morph-radius: 18px;
+  --morph-radius-sm: 12px;
+  --morph-bg: color-mix(in oklab, hsl(var(--background)) 78%, transparent);
+  --morph-border: color-mix(in oklab, hsl(var(--foreground)) 8%, transparent);
+  --morph-shadow-soft:
+    0 1px 0 color-mix(in oklab, hsl(var(--foreground)) 4%, transparent) inset,
+    0 -1px 0 color-mix(in oklab, hsl(var(--background)) 60%, transparent) inset,
+    0 10px 30px -18px color-mix(in oklab, hsl(var(--foreground)) 35%, transparent);
+  --morph-shadow-inset:
+    inset 2px 2px 6px color-mix(in oklab, hsl(var(--foreground)) 10%, transparent),
+    inset -2px -2px 6px color-mix(in oklab, hsl(var(--background)) 80%, transparent);
+  background:
+    radial-gradient(900px 500px at 12% -10%, color-mix(in oklab, hsl(var(--primary)) 10%, transparent), transparent 60%),
+    radial-gradient(700px 400px at 110% 0%, color-mix(in oklab, hsl(var(--primary)) 7%, transparent), transparent 60%),
+    hsl(var(--background));
+}
+
+/* Quieter borders everywhere */
+.lib-morph [class*="border-border"] { border-color: var(--morph-border) !important; }
+
+/* Glass panels: sidebar, mobile header */
+.lib-morph aside,
+.lib-morph header {
+  background: var(--morph-bg);
+  backdrop-filter: blur(18px) saturate(160%);
+  border-color: var(--morph-border) !important;
+}
+
+/* Inputs — neumorphic inset */
+.lib-morph input:not([type="checkbox"]):not([type="radio"]),
+.lib-morph [role="combobox"],
+.lib-morph textarea {
+  background: color-mix(in oklab, hsl(var(--background)) 92%, transparent) !important;
+  border: 1px solid var(--morph-border) !important;
+  border-radius: var(--morph-radius-sm) !important;
+  box-shadow: var(--morph-shadow-inset);
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+.lib-morph input:focus-visible,
+.lib-morph textarea:focus-visible {
+  box-shadow:
+    var(--morph-shadow-inset),
+    0 0 0 3px color-mix(in oklab, hsl(var(--primary)) 25%, transparent) !important;
+  border-color: color-mix(in oklab, hsl(var(--primary)) 40%, transparent) !important;
+}
+
+/* Buttons — soft neumorphic lift */
+.lib-morph button {
+  border-radius: var(--morph-radius-sm);
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+.lib-morph button:not([data-variant="ghost"]):not(.no-morph):not([role="tab"]):not([role="menuitem"]):not([role="option"]) {
+  box-shadow: var(--morph-shadow-soft);
+}
+.lib-morph button:hover:not(:disabled):not([role="tab"]):not([role="menuitem"]) {
+  transform: translateY(-1px);
+}
+.lib-morph button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--morph-shadow-inset);
+}
+
+/* Link rows / list items / cards — frosted cards */
+.lib-morph [data-link-card],
+.lib-morph [data-link-row] {
+  background: var(--morph-bg);
+  backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid var(--morph-border);
+  border-radius: var(--morph-radius);
+  box-shadow: var(--morph-shadow-soft);
+  transition: transform .18s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.lib-morph [data-link-card]:hover,
+.lib-morph [data-link-row]:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, hsl(var(--primary)) 30%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, hsl(var(--foreground)) 5%, transparent) inset,
+    0 18px 40px -22px color-mix(in oklab, hsl(var(--primary)) 45%, transparent);
+}
+
+/* Generic card-like surfaces */
+.lib-morph .rounded-lg,
+.lib-morph .rounded-xl,
+.lib-morph .rounded-2xl {
+  border-radius: var(--morph-radius);
+}
+
+/* Toolbars, sticky bars: glass */
+.lib-morph .sticky,
+.lib-morph [data-toolbar] {
+  background: color-mix(in oklab, hsl(var(--background)) 70%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(170%);
+  border-color: var(--morph-border) !important;
+}
+
+/* Tag chips / badges — minimal pill */
+.lib-morph [data-tag],
+.lib-morph .badge,
+.lib-morph [class*="rounded-full"] {
+  border-radius: 999px;
+}
+
+/* Dialogs / sheets — soft glass */
+.lib-morph [role="dialog"],
+[role="dialog"].lib-morph-dialog {
+  background: color-mix(in oklab, hsl(var(--background)) 80%, transparent) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--morph-border) !important;
+  border-radius: var(--morph-radius) !important;
+  box-shadow: 0 30px 80px -30px color-mix(in oklab, hsl(var(--foreground)) 50%, transparent);
+}
+
+/* Calm scrollbars */
+.lib-morph ::-webkit-scrollbar { width: 8px; height: 8px; }
+.lib-morph ::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, hsl(var(--foreground)) 12%, transparent);
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lib-morph * { transition: none !important; }
+}
