@@ -381,6 +381,32 @@
   --tint-4: oklch(0.890 0.038 var(--card-hue, 270));
 }
 
+/* ============================================================
+   Site-wide cards — every <Card> across the app gets a random
+   dark-tinted morphism via :nth-of-type cycling. Always dark,
+   regardless of light/dark theme (user requested dark-only).
+   ============================================================ */
+.lib-morph [data-card] {
+  border-radius: 18px;
+  color: hsl(var(--card-foreground));
+  --tint-0: oklch(0.20 0.045 var(--card-hue, 270));
+  --tint-1: oklch(0.235 0.050 var(--card-hue, 270));
+  --tint-2: oklch(0.265 0.055 var(--card-hue, 270));
+  --tint-3: oklch(0.295 0.060 var(--card-hue, 270));
+  --tint-4: oklch(0.325 0.065 var(--card-hue, 270));
+  --card-bg: var(--tint-2);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background-position .8s ease, background-color .25s ease;
+}
+.lib-morph [data-card]:nth-of-type(8n+1) { --card-hue: 12;  --card-bg: var(--tint-1); }
+.lib-morph [data-card]:nth-of-type(8n+2) { --card-hue: 48;  --card-bg: var(--tint-2); }
+.lib-morph [data-card]:nth-of-type(8n+3) { --card-hue: 96;  --card-bg: var(--tint-0); }
+.lib-morph [data-card]:nth-of-type(8n+4) { --card-hue: 152; --card-bg: var(--tint-3); }
+.lib-morph [data-card]:nth-of-type(8n+5) { --card-hue: 208; --card-bg: var(--tint-1); }
+.lib-morph [data-card]:nth-of-type(8n+6) { --card-hue: 268; --card-bg: var(--tint-4); }
+.lib-morph [data-card]:nth-of-type(8n+7) { --card-hue: 312; --card-bg: var(--tint-2); }
+.lib-morph [data-card]:nth-of-type(8n+8) { --card-hue: 340; --card-bg: var(--tint-0); }
+
+
 /* Glassmorphism — frosted dark grey */
 .lib-morph :is([data-morph="glass"], [data-card]:nth-of-type(8n+1)) {
   background:
