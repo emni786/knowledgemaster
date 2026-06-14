@@ -1282,10 +1282,11 @@ const LinkCard = memo(function LinkCard({
     return (
       <button
         ref={ref as React.RefObject<HTMLButtonElement>}
+        data-link-card
         onClick={selectMode ? onCheck : onSelect}
         aria-pressed={selected}
         data-selected={selected ? "true" : undefined}
-        className={`group relative overflow-hidden text-left rounded-2xl border p-3 h-[176px] transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-md -translate-y-0.5" : "border-border/50 bg-card"} ${flashClass}`}
+        className={`group relative overflow-hidden text-left rounded-2xl border p-4 h-[196px] transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-md -translate-y-0.5" : "border-border/50 bg-card"} ${flashClass}`}
       >
         <div className="flex items-start gap-2 mb-2">
           {selectMode && <Checkbox checked={isChecked} className="mt-1" />}
