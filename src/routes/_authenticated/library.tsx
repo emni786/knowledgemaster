@@ -1332,7 +1332,69 @@ const LinkCard = memo(function LinkCard({
   }, [selected]);
   const flashClass = flash ? "xn-flash" : "";
 
-  if (view === "grid") {
+  // Compact row — single dense line, title only
+  if (view === "compact") {
+    return (
+      <div
+        ref={ref as React.RefObject<HTMLDivElement>}
+        data-link-row
+        data-morph={morph.style}
+        style={morphStyle}
+        onClick={selectMode ? onCheck : onSelect}
+        role="button"
+        tabIndex={0}
+        aria-selected={selected}
+        data-selected={selected ? "true" : undefined}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (selectMode ? onCheck : onSelect)(); } }}
+        className={`group relative overflow-hidden flex items-center gap-2.5 border px-3 h-11 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40" : "border-border/50"} ${flashClass}`}
+      >
+        {selectMode && <Checkbox checked={isChecked} />}
+        {showNumbers && <span className="font-mono text-[10px] text-muted-foreground w-6 text-right shrink-0">{index}.</span>}
+        <img src={faviconFor(link.url)} alt="" className="h-4 w-4 rounded shrink-0" loading="lazy" />
+        <a
+          href={link.url} target="_blank" rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="font-medium text-sm truncate hover:underline flex-1 min-w-0"
+        >{link.title || link.url}</a>
+        {link.pinned && <Pin className="h-3 w-3 text-primary fill-primary shrink-0" />}
+        <span className="font-mono text-[10px] text-muted-foreground/60 hidden sm:block shrink-0">{domain}</span>
+        <TypeIcon type={link.content_type} className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+      </div>
+    );
+  }
+
+  // Table row — semantic columns
+  if (view === "table") {
+    return (
+      <div
+        ref={ref as React.RefObject<HTMLDivElement>}
+        data-link-row
+        data-morph={morph.style}
+        style={morphStyle}
+        onClick={selectMode ? onCheck : onSelect}
+        role="button"
+        tabIndex={0}
+        aria-selected={selected}
+        data-selected={selected ? "true" : undefined}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (selectMode ? onCheck : onSelect)(); } }}
+        className={`group relative overflow-hidden grid grid-cols-[auto_minmax(0,2.4fr)_minmax(0,1fr)_auto_auto_auto] items-center gap-3 border px-3 h-12 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40" : "border-border/50"} ${flashClass}`}
+      >
+        <img src={faviconFor(link.url)} alt="" className="h-4 w-4 rounded shrink-0" loading="lazy" />
+        <a
+          href={link.url} target="_blank" rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="font-medium text-sm truncate hover:underline"
+        >{link.title || link.url}</a>
+        <span className="font-mono text-[11px] text-muted-foreground truncate">{domain}</span>
+        <TypeIcon type={link.content_type} className="h-3.5 w-3.5 text-primary/70" />
+        <span className="font-mono text-[10px] text-muted-foreground/70 hidden md:block">{link.status}</span>
+        <span className="font-mono text-[10px] text-muted-foreground/60 hidden lg:block">{ago}</span>
+      </div>
+    );
+  }
+
+  // Thumbnails — big preview card
+  if (view === "thumbnails") {
     return (
       <button
         ref={ref as React.RefObject<HTMLButtonElement>}
@@ -1342,7 +1404,65 @@ const LinkCard = memo(function LinkCard({
         onClick={selectMode ? onCheck : onSelect}
         aria-pressed={selected}
         data-selected={selected ? "true" : undefined}
-        className={`group relative overflow-hidden text-left border p-4 h-[196px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-0.5" : "border-border/50"} ${flashClass}`}
+        className={`group relative overflow-hidden text-left border h-[296px] flex flex-col transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-0.5" : "border-border/50"} ${flashClass}`}
+      >
+        <div className="relative h-[150px] w-full overflow-hidden bg-gradient-to-br from-muted/40 to-muted/10 flex items-center justify-center">
+          <img src={faviconFor(link.url)} alt="" className="h-14 w-14 rounded-2xl opacity-90 shadow-lg" loading="lazy" />
+          <TypeIcon type={link.content_type} className="absolute top-2 right-2 h-4 w-4 text-primary/70" />
+        </div>
+        <div className="flex-1 p-4 flex flex-col gap-1.5 min-h-0">
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono text-[10px] text-muted-foreground truncate">{domain}</span>
+            {link.pinned && <Pin className="h-3 w-3 text-primary fill-primary" />}
+          </div>
+          <a
+            href={link.url} target="_blank" rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="font-semibold text-sm leading-tight hover:underline line-clamp-2"
+          >{link.title || link.url}</a>
+          {link.summary && <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{link.summary}</p>}
+          <span className="font-mono text-[10px] text-muted-foreground/60 mt-auto">{ago}</span>
+        </div>
+      </button>
+    );
+  }
+
+  // Cover flow — wide horizontal card (used inside a carousel)
+  if (view === "cover") {
+    return (
+      <button
+        ref={ref as React.RefObject<HTMLButtonElement>}
+        data-link-card
+        data-morph={morph.style}
+        style={morphStyle}
+        onClick={selectMode ? onCheck : onSelect}
+        aria-pressed={selected}
+        data-selected={selected ? "true" : undefined}
+        className={`group relative overflow-hidden text-left border w-[260px] h-[220px] shrink-0 flex flex-col transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-1 scale-[1.02]" : "border-border/50"} ${flashClass}`}
+      >
+        <div className="relative h-[110px] w-full overflow-hidden bg-gradient-to-br from-muted/40 to-muted/10 flex items-center justify-center">
+          <img src={faviconFor(link.url)} alt="" className="h-12 w-12 rounded-xl opacity-90" loading="lazy" />
+        </div>
+        <div className="flex-1 p-3 flex flex-col gap-1 min-h-0">
+          <span className="font-mono text-[10px] text-muted-foreground truncate">{domain}</span>
+          <span className="font-semibold text-sm leading-tight line-clamp-2">{link.title || link.url}</span>
+        </div>
+      </button>
+    );
+  }
+
+  // Grid / masonry — card layout
+  if (view === "grid" || view === "masonry") {
+    return (
+      <button
+        ref={ref as React.RefObject<HTMLButtonElement>}
+        data-link-card
+        data-morph={morph.style}
+        style={morphStyle}
+        onClick={selectMode ? onCheck : onSelect}
+        aria-pressed={selected}
+        data-selected={selected ? "true" : undefined}
+        className={`group relative overflow-hidden text-left border p-4 ${view === "masonry" ? "block w-full break-inside-avoid mb-4" : "h-[196px]"} transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-0.5" : "border-border/50"} ${flashClass}`}
       >
         <div className="flex items-start gap-2.5">
           {selectMode && <Checkbox checked={isChecked} className="mt-0.5" />}
@@ -1371,8 +1491,8 @@ const LinkCard = memo(function LinkCard({
           </div>
           <TypeIcon type={link.content_type} className="h-4 w-4 text-primary/70 shrink-0 mt-0.5" />
         </div>
-        {link.summary && <p className="text-xs text-muted-foreground line-clamp-2 mt-2 leading-relaxed">{link.summary}</p>}
-        <div className="flex items-center gap-1.5 mt-auto pt-3 flex-wrap">
+        {link.summary && <p className={`text-xs text-muted-foreground mt-2 leading-relaxed ${view === "masonry" ? "" : "line-clamp-2"}`}>{link.summary}</p>}
+        <div className="flex items-center gap-1.5 mt-3 pt-1 flex-wrap">
           {link.status === "pending" ? (
             <button
               onClick={(e) => { e.stopPropagation(); onRetry(); }}
