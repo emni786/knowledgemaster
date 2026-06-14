@@ -707,6 +707,7 @@ const CenterToolbar = memo(forwardRef<HTMLInputElement, CenterToolbarProps>(func
   {
     query, onQueryChange, view, setView, showNumbers, setShowNumbers,
     selectMode, setSelectMode, onAdd, addPending, onSmartSearch, onImport, onExport, onRefresh, onOpenFilters,
+    pendingCount, onRetryPending, retryPendingPending,
   },
   ref,
 ) {
