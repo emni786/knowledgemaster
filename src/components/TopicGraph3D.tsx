@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import {
   ExternalLink, Hash, Link2, Loader2, Sparkles,
   Search, Clock, Route as RouteIcon, Boxes, BarChart3, X,
+  Orbit, Globe2, Atom, Disc3, Square,
 } from "lucide-react";
 import { faviconFor, getDomain } from "@/lib/url";
 
@@ -129,7 +130,7 @@ export function TopicGraph3D({
   const [mounted, setMounted] = useState(false);
   const [openTag, setOpenTag] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [days, setDays] = useState<number>(365); // time travel window
+  const [days, setDays] = useState<number>(365);
   const [pathA, setPathA] = useState<string>("");
   const [pathB, setPathB] = useState<string>("");
   const [internalClusters, setInternalClusters] = useState(false);
@@ -139,6 +140,8 @@ export function TopicGraph3D({
     else setInternalClusters(v);
   };
   const [hoverHighlight, setHoverHighlight] = useState<Set<string>>(new Set());
+  type Mode = "cosmos" | "sphere" | "galaxy" | "atomic" | "flat";
+  const [mode, setMode] = useState<Mode>("cosmos");
 
   useEffect(() => setMounted(true), []);
 
@@ -244,6 +247,70 @@ export function TopicGraph3D({
     });
   }, [nodes, adjacency, showClusters]);
 
+  // Layout positions per mode. Cosmos = free force layout (no pinning).
+  // Other modes pin nodes via fx/fy/fz, which the force engine respects.
+  const positionedNodes = useMemo(() => {
+    if (mode === "cosmos") {
+      return displayNodes.map((n) => ({ ...n, fx: undefined, fy: undefined, fz: undefined }));
+    }
+    const N = displayNodes.length;
+    const sorted = [...displayNodes].sort((a, b) => b.count - a.count);
+    const indexById = new Map(sorted.map((n, i) => [n.id, i]));
+    const R = Math.max(180, Math.sqrt(N) * 60);
+
+    return displayNodes.map((n) => {
+      const i = indexById.get(n.id) ?? 0;
+      let fx = 0, fy = 0, fz = 0;
+
+      if (mode === "sphere") {
+        // Fibonacci sphere — even distribution
+        const phi = Math.acos(1 - (2 * (i + 0.5)) / N);
+        const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+        fx = R * Math.sin(phi) * Math.cos(theta);
+        fy = R * Math.sin(phi) * Math.sin(theta);
+        fz = R * Math.cos(phi);
+      } else if (mode === "galaxy") {
+        // Spiral disk with 4 arms, slight z thickness
+        const arms = 4;
+        const arm = i % arms;
+        const t = i / Math.max(1, N - 1);
+        const radius = 40 + t * R * 1.4;
+        const angle = arm * (Math.PI * 2 / arms) + t * Math.PI * 6;
+        fx = radius * Math.cos(angle);
+        fz = radius * Math.sin(angle);
+        fy = (Math.sin(i * 1.7) * 30) * (0.4 + 0.6 * (1 - t));
+      } else if (mode === "atomic") {
+        // Cluster per group around its own hub on a ring
+        const groups = Array.from(new Set(displayNodes.map((d) => d.group))).sort((a, b) => a - b);
+        const gIdx = groups.indexOf(n.group);
+        const G = groups.length || 1;
+        const hubR = R * 0.9;
+        const hubAngle = (gIdx / G) * Math.PI * 2;
+        const hubX = hubR * Math.cos(hubAngle);
+        const hubZ = hubR * Math.sin(hubAngle);
+        // Index within group → orbit
+        const within = displayNodes.filter((d) => d.group === n.group);
+        const local = within.findIndex((d) => d.id === n.id);
+        const M = within.length;
+        const orbitR = 30 + Math.sqrt(M) * 18;
+        const a = (local / Math.max(1, M)) * Math.PI * 2;
+        fx = hubX + orbitR * Math.cos(a);
+        fz = hubZ + orbitR * Math.sin(a);
+        fy = (local % 2 === 0 ? 1 : -1) * (10 + Math.sqrt(n.count) * 4);
+      } else if (mode === "flat") {
+        // 2D plane (z=0), spiral by importance
+        const t = i / Math.max(1, N - 1);
+        const angle = i * 0.6;
+        const radius = 40 + t * R * 1.5;
+        fx = radius * Math.cos(angle);
+        fy = radius * Math.sin(angle);
+        fz = 0;
+      }
+      return { ...n, fx, fy, fz };
+    });
+  }, [displayNodes, mode]);
+
+
   // Path finder: BFS shortest path
   const pathSet = useMemo(() => {
     if (!pathA || !pathB || pathA === pathB) return new Set<string>();
@@ -311,29 +378,103 @@ export function TopicGraph3D({
         scene.add(back);
         scene.userData._lights = true;
       }
-      // Starfield background scene
+      // Dense, twinkling starfield + nebula sprites
       if (!scene.userData._starfield) {
         const starGeo = new THREE.BufferGeometry();
-        const N = 1500;
+        const N = 4000;
         const arr = new Float32Array(N * 3);
+        const colArr = new Float32Array(N * 3);
         for (let i = 0; i < N; i++) {
-          const r = 1500 + Math.random() * 1500;
+          const r = 1500 + Math.random() * 2500;
           const t = Math.random() * Math.PI * 2;
           const p = Math.acos(2 * Math.random() - 1);
           arr[i * 3] = r * Math.sin(p) * Math.cos(t);
           arr[i * 3 + 1] = r * Math.sin(p) * Math.sin(t);
           arr[i * 3 + 2] = r * Math.cos(p);
+          // Vary star color: warm gold, white, icy blue
+          const tint = Math.random();
+          if (tint < 0.2)      { colArr[i*3]=1; colArr[i*3+1]=0.85; colArr[i*3+2]=0.55; }
+          else if (tint < 0.5) { colArr[i*3]=0.7; colArr[i*3+1]=0.85; colArr[i*3+2]=1; }
+          else                 { colArr[i*3]=1; colArr[i*3+1]=1; colArr[i*3+2]=1; }
         }
         starGeo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+        starGeo.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
         const starMat = new THREE.PointsMaterial({
-          color: 0xffffff, size: 1.6, sizeAttenuation: true, transparent: true, opacity: 0.7,
+          size: 2.0, sizeAttenuation: true, transparent: true, opacity: 0.85,
+          vertexColors: true, depthWrite: false, blending: THREE.AdditiveBlending,
         });
         const stars = new THREE.Points(starGeo, starMat);
         scene.add(stars);
         scene.userData._starfield = stars;
+
+        // Nebula clouds — soft additive sprites in deep colors
+        const nebulaColors = [0x6b21a8, 0x1d4ed8, 0x0e7490, 0xbe185d];
+        // Generate a soft radial gradient texture once
+        const cnv = document.createElement("canvas");
+        cnv.width = cnv.height = 256;
+        const ctx = cnv.getContext("2d")!;
+        const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+        grad.addColorStop(0, "rgba(255,255,255,1)");
+        grad.addColorStop(0.4, "rgba(255,255,255,0.35)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 256, 256);
+        const nebTex = new THREE.CanvasTexture(cnv);
+        for (let i = 0; i < 14; i++) {
+          const mat = new THREE.SpriteMaterial({
+            map: nebTex,
+            color: nebulaColors[i % nebulaColors.length],
+            transparent: true,
+            opacity: 0.18,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+          });
+          const sp = new THREE.Sprite(mat);
+          const r = 800 + Math.random() * 1800;
+          const t = Math.random() * Math.PI * 2;
+          const p = Math.acos(2 * Math.random() - 1);
+          sp.position.set(
+            r * Math.sin(p) * Math.cos(t),
+            r * Math.sin(p) * Math.sin(t) * 0.6,
+            r * Math.cos(p),
+          );
+          const s = 800 + Math.random() * 1200;
+          sp.scale.set(s, s, 1);
+          scene.add(sp);
+        }
+      }
+
+      // Cinematic bloom via react-force-graph's exposed composer
+      if (!scene.userData._bloom && fg.postProcessingComposer) {
+        scene.userData._bloom = true;
+        (async () => {
+          try {
+            const { UnrealBloomPass } = await import(
+              "three/examples/jsm/postprocessing/UnrealBloomPass.js"
+            );
+            const composer = fg.postProcessingComposer?.();
+            if (composer) {
+              const bloom = new UnrealBloomPass(
+                new THREE.Vector2(size.w, size.h),
+                0.85, 0.55, 0.08,
+              );
+              composer.addPass(bloom);
+            }
+          } catch {}
+        })();
       }
     } catch {}
-  }, [mounted, displayNodes.length]);
+  }, [mounted, positionedNodes.length, size.w, size.h]);
+
+  const flyTo = (id: string) => {
+    const fg = fgRef.current;
+    if (!fg) return;
+    const n = (positionedNodes as any[]).find((x) => x.id === id);
+    if (!n || n.x == null) return;
+    const dist = 140;
+    const ratio = 1 + dist / Math.hypot(n.x, n.y, n.z || 0.001);
+    fg.cameraPosition({ x: n.x * ratio, y: n.y * ratio, z: (n.z || 0) * ratio }, n, 1200);
+  };
 
   const openLinks = openTag ? byTag.get(openTag) ?? [] : [];
 
@@ -374,7 +515,7 @@ export function TopicGraph3D({
               ref={fgRef}
               width={size.w}
               height={size.h}
-              graphData={{ nodes: displayNodes, links: edges }}
+              graphData={{ nodes: positionedNodes, links: edges }}
               backgroundColor="#02030a"
               nodeLabel={(n: any) => `${n.label} · ${n.count} link${n.count > 1 ? "s" : ""}`}
               nodeThreeObject={(n: any) => buildPlanetObject(n as GNode, highlightSet.has(n.id))}
@@ -480,7 +621,7 @@ export function TopicGraph3D({
                     return (
                       <button
                         key={id}
-                        onClick={() => setOpenTag(id)}
+                        onClick={() => { setOpenTag(id); flyTo(id); }}
                         className="w-full flex items-center gap-2 text-left px-2 py-1 rounded hover:bg-muted text-sm"
                       >
                         <span className="h-2 w-2 rounded-full" style={{ background: n.color }} />
@@ -493,6 +634,43 @@ export function TopicGraph3D({
                     <div className="text-xs text-muted-foreground px-2 py-2">No matches.</div>
                   )}
                 </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Mode selector */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-white/10 ${mode !== "cosmos" ? "text-amber-300" : ""}`}>
+                <Orbit className="h-3.5 w-3.5" /> Mode
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" className="w-56">
+              <div className="space-y-1">
+                <div className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5">Layout</div>
+                {[
+                  { id: "cosmos" as const, label: "Cosmos", desc: "Free-flowing galaxy",   icon: Sparkles },
+                  { id: "galaxy" as const, label: "Galaxy", desc: "Spiral disk",            icon: Disc3 },
+                  { id: "sphere" as const, label: "Sphere", desc: "Planets on a sphere",    icon: Globe2 },
+                  { id: "atomic" as const, label: "Atomic", desc: "Orbits around hubs",     icon: Atom },
+                  { id: "flat"   as const, label: "2D",     desc: "Flat plane layout",      icon: Square },
+                ].map((m) => {
+                  const Icon = m.icon;
+                  const active = mode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setMode(m.id)}
+                      className={`w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-sm transition-colors ${
+                        active ? "bg-primary/15 text-primary" : "hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="font-medium">{m.label}</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground">{m.desc}</span>
+                    </button>
+                  );
+                })}
               </div>
             </PopoverContent>
           </Popover>
