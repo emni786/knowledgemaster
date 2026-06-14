@@ -135,7 +135,7 @@ export const testTelegramWebhook = createServerFn({ method: "POST" })
         body: JSON.stringify({
           url: expectedUrl,
           secret_token: bot.webhook_secret,
-          allowed_updates: ["message", "edited_message", "channel_post"],
+          allowed_updates: ["message", "edited_message", "channel_post", "edited_channel_post"],
         }),
       });
       const setJson = await setRes.json() as { ok: boolean; description?: string };
