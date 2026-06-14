@@ -710,8 +710,8 @@ function MobileHeader({ email, onAdd, onSignOut }: { email?: string; onAdd: (raw
 type CenterToolbarProps = {
   query: string;
   onQueryChange: (v: string) => void;
-  view: "list" | "grid";
-  setView: (v: "list" | "grid") => void;
+  view: LayoutMode;
+  setView: (v: LayoutMode) => void;
   showNumbers: boolean;
   setShowNumbers: (v: boolean) => void;
   selectMode: boolean;
@@ -991,7 +991,7 @@ function Section({ title, count, icon: Icon, iconClass, children }: { title: str
 
 type Groups = { ready: LinkRow[]; pending: LinkRow[]; failed: LinkRow[] };
 
-function useGridColCount(view: "list" | "grid") {
+function useGridColCount(view: LayoutMode) {
   const [cols, setCols] = useState(() => {
     if (view === "list") return 1;
     if (typeof window === "undefined") return 3;
@@ -1021,7 +1021,7 @@ function VirtualLinkList({
 }: {
   scrollParentRef: React.RefObject<HTMLDivElement | null>;
   groups: Groups;
-  view: "list" | "grid";
+  view: LayoutMode;
   showNumbers: boolean;
   selectMode: boolean;
   selectedIds: Set<string>;
@@ -1246,7 +1246,7 @@ function VirtualFlatList({
 function LinkGrid({
   links, view, showNumbers, numberOffset, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
 }: {
-  links: LinkRow[]; view: "list" | "grid"; showNumbers: boolean; numberOffset: number;
+  links: LinkRow[]; view: LayoutMode; showNumbers: boolean; numberOffset: number;
   selectMode: boolean; selectedIds: Set<string>; toggleSelected: (id: string) => void;
   selected: string | null; onSelect: (id: string) => void; onPin: (id: string, p: boolean) => void;
   onRetry: (id: string) => void;
@@ -1274,7 +1274,7 @@ function LinkGrid({
 }
 
 type LinkCardProps = {
-  link: LinkRow; index: number; view: "list" | "grid"; showNumbers: boolean;
+  link: LinkRow; index: number; view: LayoutMode; showNumbers: boolean;
   selected: boolean; onSelect: () => void; onPin: (p: boolean) => void;
   onRetry: () => void;
   selectMode: boolean; isChecked: boolean; onCheck: () => void;
