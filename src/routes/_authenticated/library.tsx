@@ -718,7 +718,7 @@ const CenterToolbar = memo(forwardRef<HTMLInputElement, CenterToolbarProps>(func
   ref,
 ) {
   return (
-    <div className="glass sticky top-0 z-20 border-b border-border/50 px-6 py-3 space-y-3">
+    <div data-toolbar className="glass sticky top-0 z-20 border-b border-border/50 px-6 py-3 space-y-3">
       <AddLinkInput onAdd={onAdd} loading={addPending} />
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-xl">
