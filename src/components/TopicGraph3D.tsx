@@ -638,6 +638,43 @@ export function TopicGraph3D({
             </PopoverContent>
           </Popover>
 
+          {/* Mode selector */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-white/10 ${mode !== "cosmos" ? "text-amber-300" : ""}`}>
+                <Orbit className="h-3.5 w-3.5" /> Mode
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" className="w-56">
+              <div className="space-y-1">
+                <div className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5">Layout</div>
+                {[
+                  { id: "cosmos" as const, label: "Cosmos", desc: "Free-flowing galaxy",   icon: Sparkles },
+                  { id: "galaxy" as const, label: "Galaxy", desc: "Spiral disk",            icon: Disc3 },
+                  { id: "sphere" as const, label: "Sphere", desc: "Planets on a sphere",    icon: Globe2 },
+                  { id: "atomic" as const, label: "Atomic", desc: "Orbits around hubs",     icon: Atom },
+                  { id: "flat"   as const, label: "2D",     desc: "Flat plane layout",      icon: Square },
+                ].map((m) => {
+                  const Icon = m.icon;
+                  const active = mode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setMode(m.id)}
+                      className={`w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-sm transition-colors ${
+                        active ? "bg-primary/15 text-primary" : "hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="font-medium">{m.label}</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground">{m.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
+
           {/* Time Travel */}
           <Popover>
             <PopoverTrigger asChild>
