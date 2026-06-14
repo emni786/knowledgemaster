@@ -54,9 +54,14 @@ function DashboardPage() {
       total: active.length,
       pinned: active.filter((l) => l.pinned).length,
       failed: active.filter((l) => l.status === "failed").length,
+      pending: active.filter((l) => l.status === "pending").length,
+      ready: active.filter((l) => l.status === "ready").length,
       recent: recent.length,
+      trashed: links.filter((l) => l.deleted_at).length,
     };
   }, [links]);
+
+  const collectionsQuery = useQuery({ queryKey: ["collections-list"], queryFn: fetchCollections, staleTime: 60_000 });
 
   const series = useMemo(() => {
     const days: { date: string; label: string; count: number }[] = [];
