@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchLinks } from "@/lib/api/links";
 import { fetchCollections } from "@/lib/api/collections";
 import { AppShell } from "@/components/AppShell";
-import { TopicGraph3D } from "@/components/TopicGraph3D";
+
 import { PageTabs } from "@/components/PageTabs";
 import { analyzeTopics } from "@/lib/insights.functions";
 import {
