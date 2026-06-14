@@ -8,7 +8,7 @@ import {
   BarChart3, Newspaper, Library as LibraryIcon, ChevronLeft, ChevronRight,
   X, ExternalLink, Star, RotateCcw, MoreHorizontal, Filter, FileText,
   Video, Github, BookOpen, Wrench, MessagesSquare, HelpCircle, Inbox,
-  Upload, Download, Tag, Keyboard, AlertCircle, Loader2,
+  Upload, Download, Tag, Keyboard, AlertCircle, Loader2, Menu,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
