@@ -1343,17 +1343,18 @@ const LinkCard = memo(function LinkCard({
   return (
     <div
       ref={ref as React.RefObject<HTMLDivElement>}
+      data-link-row
       onClick={selectMode ? onCheck : onSelect}
       role="button"
       tabIndex={0}
       aria-selected={selected}
       data-selected={selected ? "true" : undefined}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (selectMode ? onCheck : onSelect)(); } }}
-      className={`group relative overflow-hidden flex items-center gap-3 rounded-2xl border px-3 h-[76px] cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-sm pl-4 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-primary" : "border-border/50 bg-card hover:bg-accent/40"} ${flashClass}`}
+      className={`group relative overflow-hidden flex items-center gap-3 rounded-2xl border px-3.5 h-[72px] cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/40 shadow-sm pl-4 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-primary" : "border-border/50 bg-card hover:bg-accent/40"} ${flashClass}`}
     >
       {selectMode && <Checkbox checked={isChecked} />}
-      {showNumbers && <span className="font-mono text-[10px] text-muted-foreground w-6 text-right">{index}.</span>}
-      <img src={faviconFor(link.url)} alt="" className="h-5 w-5 rounded" loading="lazy" />
+      {showNumbers && <span className="font-mono text-[10px] text-muted-foreground w-6 text-right shrink-0">{index}.</span>}
+      <img src={faviconFor(link.url)} alt="" className="h-5 w-5 rounded shrink-0" loading="lazy" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <Tooltip>
@@ -1363,7 +1364,7 @@ const LinkCard = memo(function LinkCard({
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="font-medium text-sm truncate hover:underline"
+                className="font-medium text-sm truncate hover:underline leading-snug"
               >{link.title || link.url}</a>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
@@ -1382,20 +1383,17 @@ const LinkCard = memo(function LinkCard({
           ) : link.status === "failed" ? (
             <span className="font-mono text-[10px] text-destructive">Analysis failed</span>
           ) : (
-            link.tags.slice(0, 4).map((t) => (
-              <span key={t} className="font-mono text-[10px] text-primary/80">#{t}</span>
+            link.tags.slice(0, 3).map((t) => (
+              <span key={t} data-tag className="font-mono text-[10px] text-primary/70">{t}</span>
             ))
           )}
         </div>
-        {link.summary && link.status === "ready" && (
-          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{link.summary}</p>
-        )}
       </div>
-      <TypeIcon type={link.content_type} className="h-4 w-4 text-primary/70" />
+      <TypeIcon type={link.content_type} className="h-4 w-4 text-primary/70 shrink-0" />
       {link.status === "pending" && (
         <button
           onClick={(e) => { e.stopPropagation(); onRetry(); }}
-          className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary"
+          className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary shrink-0"
           title="Analyze"
         >
           <RefreshCw className="h-3.5 w-3.5" />
@@ -1403,11 +1401,11 @@ const LinkCard = memo(function LinkCard({
       )}
       <button
         onClick={(e) => { e.stopPropagation(); onPin(link.pinned); }}
-        className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary"
+        className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary shrink-0"
       >
         <Pin className={`h-3.5 w-3.5 ${link.pinned ? "fill-primary text-primary" : ""}`} />
       </button>
-      <span className="font-mono text-[10px] text-muted-foreground/60 hidden md:block">{ago}</span>
+      <span className="font-mono text-[10px] text-muted-foreground/60 hidden md:block shrink-0">{ago}</span>
       {link.status === "pending" && <AnalysisProgressBar />}
     </div>
   );
