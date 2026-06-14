@@ -1231,7 +1231,7 @@ function LinkGrid({
   onRetry: (id: string) => void;
 }) {
   return (
-    <div className={view === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" : "space-y-1.5"}>
+    <div className={view === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" : "space-y-2"}>
       {links.map((l, i) => (
         <LinkCard
           key={l.id}
