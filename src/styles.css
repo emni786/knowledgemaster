@@ -350,100 +350,118 @@
 }
 
 /* ============================================================
-   Random Morphism — per-card visual variety
-   Each [data-link-card] / [data-link-row] gets a data-morph
-   style + --card-accent (hue 0-360) + --card-radius.
-   Append after base rules so source order overrides defaults.
+   Random Morphism — uniform shape, random dark-grey shades.
+   Every card uses the SAME rounded rectangle; only the surface
+   treatment (shadow, border, hover) and grey shade vary per card.
+   --card-shade is an integer 0..4 chosen from the link id.
    ============================================================ */
 .lib-morph [data-link-card],
 .lib-morph [data-link-row] {
-  border-radius: var(--card-radius, var(--morph-radius));
+  border-radius: 20px;
+  /* dark-grey palette: 5 evenly spaced shades, all desaturated */
+  --grey-0: oklch(0.20 0.005 270);
+  --grey-1: oklch(0.235 0.006 270);
+  --grey-2: oklch(0.265 0.006 270);
+  --grey-3: oklch(0.295 0.007 270);
+  --grey-4: oklch(0.325 0.007 270);
+  --card-bg:
+    var(--grey-0);
+}
+.lib-morph [style*="--card-shade: 1"] { --card-bg: var(--grey-1); }
+.lib-morph [style*="--card-shade: 2"] { --card-bg: var(--grey-2); }
+.lib-morph [style*="--card-shade: 3"] { --card-bg: var(--grey-3); }
+.lib-morph [style*="--card-shade: 4"] { --card-bg: var(--grey-4); }
+
+/* Light theme — invert the grey ramp to soft warm-greys */
+:root:not(.dark) .lib-morph [data-link-card],
+:root:not(.dark) .lib-morph [data-link-row] {
+  --grey-0: oklch(0.96 0.003 270);
+  --grey-1: oklch(0.945 0.004 270);
+  --grey-2: oklch(0.925 0.004 270);
+  --grey-3: oklch(0.905 0.005 270);
+  --grey-4: oklch(0.885 0.005 270);
 }
 
-/* Glassmorphism */
+/* Glassmorphism — frosted dark grey */
 .lib-morph [data-morph="glass"] {
   background:
     linear-gradient(135deg,
-      color-mix(in oklab, hsl(var(--card-accent) 85% 65%) 14%, transparent),
-      color-mix(in oklab, hsl(var(--background)) 55%, transparent));
-  backdrop-filter: blur(18px) saturate(180%);
-  border: 1px solid color-mix(in oklab, hsl(var(--card-accent) 85% 70%) 30%, transparent);
+      color-mix(in oklab, white 6%, var(--card-bg)),
+      var(--card-bg));
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in oklab, white 12%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, white 30%, transparent),
-    0 10px 30px -18px color-mix(in oklab, hsl(var(--card-accent) 85% 50%) 45%, transparent);
+    inset 0 1px 0 color-mix(in oklab, white 8%, transparent),
+    0 10px 30px -18px rgba(0, 0, 0, 0.55);
 }
 .lib-morph [data-morph="glass"]:hover {
-  backdrop-filter: blur(24px) saturate(200%);
-  border-color: color-mix(in oklab, hsl(var(--card-accent) 85% 70%) 55%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in oklab, white 40%, transparent),
-    0 18px 44px -20px color-mix(in oklab, hsl(var(--card-accent) 85% 55%) 55%, transparent);
+  backdrop-filter: blur(22px) saturate(160%);
+  border-color: color-mix(in oklab, white 22%, transparent);
 }
 
-/* Neumorphism */
+/* Neumorphism — soft extruded grey */
 .lib-morph [data-morph="neu"] {
-  background: hsl(var(--background));
+  background: var(--card-bg);
   border: 1px solid transparent;
   backdrop-filter: none;
   box-shadow:
-    8px 8px 22px color-mix(in oklab, hsl(var(--foreground)) 14%, transparent),
-    -8px -8px 22px color-mix(in oklab, hsl(var(--background)) 90%, white 30%);
+    6px 6px 16px rgba(0, 0, 0, 0.45),
+    -4px -4px 14px color-mix(in oklab, white 5%, transparent);
 }
 .lib-morph [data-morph="neu"]:hover {
   box-shadow:
-    12px 12px 28px color-mix(in oklab, hsl(var(--foreground)) 18%, transparent),
-    -12px -12px 28px color-mix(in oklab, hsl(var(--background)) 92%, white 40%);
+    9px 9px 22px rgba(0, 0, 0, 0.55),
+    -6px -6px 18px color-mix(in oklab, white 7%, transparent);
 }
 
-/* Claymorphism */
+/* Claymorphism — puffy grey */
 .lib-morph [data-morph="clay"] {
   background:
     linear-gradient(160deg,
-      color-mix(in oklab, hsl(var(--card-accent) 75% 82%) 55%, hsl(var(--background))),
-      color-mix(in oklab, hsl(var(--card-accent) 75% 72%) 35%, hsl(var(--background))));
-  border: 1px solid color-mix(in oklab, white 30%, transparent);
+      color-mix(in oklab, white 7%, var(--card-bg)),
+      var(--card-bg));
+  border: 1px solid color-mix(in oklab, white 6%, transparent);
   backdrop-filter: none;
   box-shadow:
-    inset 0 -6px 14px color-mix(in oklab, hsl(var(--card-accent) 60% 35%) 18%, transparent),
-    inset 0 6px 14px color-mix(in oklab, white 45%, transparent),
-    0 18px 34px -12px color-mix(in oklab, hsl(var(--card-accent) 70% 50%) 30%, transparent);
+    inset 0 -6px 14px rgba(0, 0, 0, 0.30),
+    inset 0 6px 14px color-mix(in oklab, white 8%, transparent),
+    0 14px 28px -10px rgba(0, 0, 0, 0.45);
 }
 .lib-morph [data-morph="clay"]:hover {
   transform: translateY(-3px) scale(1.012);
 }
 
-/* Skeuomorphism — physical pressable surface */
+/* Skeuomorphism — pressable grey panel */
 .lib-morph [data-morph="skeu"] {
   background:
     linear-gradient(180deg,
-      color-mix(in oklab, hsl(var(--background)) 55%, white 25%),
-      color-mix(in oklab, hsl(var(--background)) 92%, black 5%));
-  border: 1px solid color-mix(in oklab, hsl(var(--foreground)) 16%, transparent);
+      color-mix(in oklab, white 8%, var(--card-bg)),
+      color-mix(in oklab, black 8%, var(--card-bg)));
+  border: 1px solid color-mix(in oklab, white 10%, transparent);
   backdrop-filter: none;
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, white 55%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, hsl(var(--foreground)) 10%, transparent),
-    0 2px 0 color-mix(in oklab, hsl(var(--foreground)) 10%, transparent),
-    0 10px 22px -10px color-mix(in oklab, hsl(var(--foreground)) 32%, transparent);
+    inset 0 1px 0 color-mix(in oklab, white 14%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 2px 0 rgba(0, 0, 0, 0.30),
+    0 10px 22px -10px rgba(0, 0, 0, 0.45);
 }
 .lib-morph [data-morph="skeu"]:active {
   transform: translateY(1px);
-  box-shadow:
-    inset 0 2px 6px color-mix(in oklab, hsl(var(--foreground)) 18%, transparent);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
-/* Auroramorphism */
+/* Aurora — subtle moving sheen on grey */
 .lib-morph [data-morph="aurora"] {
   background:
     linear-gradient(120deg,
-      color-mix(in oklab, hsl(var(--card-accent) 90% 65%) 35%, hsl(var(--background))),
-      color-mix(in oklab, hsl(calc(var(--card-accent) + 60) 90% 60%) 30%, hsl(var(--background))),
-      color-mix(in oklab, hsl(calc(var(--card-accent) + 140) 90% 65%) 30%, hsl(var(--background))));
+      var(--card-bg),
+      color-mix(in oklab, white 8%, var(--card-bg)),
+      var(--card-bg));
   background-size: 220% 220%;
   background-position: 0% 50%;
-  border: 1px solid color-mix(in oklab, white 18%, transparent);
-  backdrop-filter: blur(10px) saturate(170%);
-  box-shadow: 0 18px 40px -18px color-mix(in oklab, hsl(var(--card-accent) 85% 55%) 45%, transparent);
+  border: 1px solid color-mix(in oklab, white 8%, transparent);
+  backdrop-filter: none;
+  box-shadow: 0 12px 28px -16px rgba(0, 0, 0, 0.55);
   animation: lm-aurora 16s ease infinite;
 }
 .lib-morph [data-morph="aurora"]:hover { animation-duration: 6s; }
@@ -452,59 +470,57 @@
   50% { background-position: 100% 50%; }
 }
 
-/* Holographmorphism — iridescent shimmer */
+/* Holographic — faint cool shimmer on grey */
 .lib-morph [data-morph="holo"] {
   background:
     linear-gradient(125deg,
-      hsl(var(--card-accent) 95% 70% / .35),
-      hsl(calc(var(--card-accent) + 80) 95% 65% / .30),
-      hsl(calc(var(--card-accent) + 160) 95% 70% / .30),
-      hsl(calc(var(--card-accent) + 240) 95% 65% / .30)),
-    hsl(var(--background));
-  background-size: 320% 320%;
+      color-mix(in oklab, white 4%, var(--card-bg)),
+      color-mix(in oklab, white 10%, var(--card-bg)),
+      color-mix(in oklab, white 4%, var(--card-bg)));
+  background-size: 280% 280%;
   background-position: 0% 0%;
-  border: 1px solid color-mix(in oklab, white 28%, transparent);
-  backdrop-filter: blur(8px) saturate(200%);
+  border: 1px solid color-mix(in oklab, white 14%, transparent);
+  backdrop-filter: none;
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, white 40%, transparent),
-    0 16px 40px -20px color-mix(in oklab, hsl(var(--card-accent) 90% 60%) 50%, transparent);
+    inset 0 1px 0 color-mix(in oklab, white 12%, transparent),
+    0 12px 28px -16px rgba(0, 0, 0, 0.55);
   transition: background-position 1.2s ease, transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 .lib-morph [data-morph="holo"]:hover { background-position: 100% 100%; }
 
-/* Papermorphism — layered material sheets */
+/* Paper — layered sheets, flat grey */
 .lib-morph [data-morph="paper"] {
-  background: color-mix(in oklab, hsl(var(--background)) 82%, white 10%);
-  border: 1px solid color-mix(in oklab, hsl(var(--foreground)) 6%, transparent);
+  background: color-mix(in oklab, white 3%, var(--card-bg));
+  border: 1px solid color-mix(in oklab, white 5%, transparent);
   backdrop-filter: none;
   box-shadow:
-    0 1px 1px color-mix(in oklab, hsl(var(--foreground)) 8%, transparent),
-    0 4px 8px -2px color-mix(in oklab, hsl(var(--foreground)) 10%, transparent),
-    0 16px 24px -12px color-mix(in oklab, hsl(var(--foreground)) 14%, transparent);
+    0 1px 1px rgba(0, 0, 0, 0.30),
+    0 4px 8px -2px rgba(0, 0, 0, 0.35),
+    0 16px 24px -12px rgba(0, 0, 0, 0.45);
 }
 .lib-morph [data-morph="paper"]:hover {
   transform: translateY(-4px);
   box-shadow:
-    0 2px 2px color-mix(in oklab, hsl(var(--foreground)) 8%, transparent),
-    0 10px 16px -4px color-mix(in oklab, hsl(var(--foreground)) 12%, transparent),
-    0 32px 44px -16px color-mix(in oklab, hsl(var(--foreground)) 20%, transparent);
+    0 2px 2px rgba(0, 0, 0, 0.30),
+    0 10px 16px -4px rgba(0, 0, 0, 0.40),
+    0 30px 42px -16px rgba(0, 0, 0, 0.55);
 }
 
-/* Metallimorphism — brushed chrome */
+/* Metal — brushed grey, sweep on hover */
 .lib-morph [data-morph="metal"] {
   background:
     linear-gradient(135deg,
-      color-mix(in oklab, hsl(var(--card-accent) 14% 78%) 80%, hsl(var(--background))),
-      color-mix(in oklab, hsl(var(--card-accent) 14% 56%) 80%, hsl(var(--background))),
-      color-mix(in oklab, hsl(var(--card-accent) 14% 82%) 80%, hsl(var(--background))));
+      color-mix(in oklab, white 10%, var(--card-bg)),
+      color-mix(in oklab, black 6%, var(--card-bg)),
+      color-mix(in oklab, white 10%, var(--card-bg)));
   background-size: 220% 220%;
   background-position: 0% 0%;
-  border: 1px solid color-mix(in oklab, hsl(var(--foreground)) 18%, transparent);
+  border: 1px solid color-mix(in oklab, white 14%, transparent);
   backdrop-filter: none;
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, white 45%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, black 22%, transparent),
-    0 14px 30px -16px color-mix(in oklab, hsl(var(--foreground)) 40%, transparent);
+    inset 0 1px 0 color-mix(in oklab, white 18%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 12px 28px -16px rgba(0, 0, 0, 0.55);
   transition: background-position .8s ease, transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 .lib-morph [data-morph="metal"]:hover { background-position: 100% 100%; }
