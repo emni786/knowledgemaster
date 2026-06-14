@@ -1847,8 +1847,8 @@ function SkeletonList({ view = "list" }: { view?: LayoutMode }) {
     const update = () => {
       const h = wrapRef.current?.clientHeight || window.innerHeight || 800;
       const w = window.innerWidth;
-      const nextCols = view === "grid" ? (w >= 1280 ? 3 : w >= 768 ? 2 : 1) : 1;
-      const rowH = view === "grid" ? 188 : 56; // grid card + gap, list row + gap
+      const nextCols = isMultiColLayout(view) ? (w >= 1280 ? 3 : w >= 768 ? 2 : 1) : 1;
+      const rowH = isMultiColLayout(view) ? 188 : 56; // grid card + gap, list row + gap
       const rows = Math.ceil(h / rowH) + 1; // tiny overscan
       setCols(nextCols);
       setCount(rows * nextCols);
@@ -1858,10 +1858,10 @@ function SkeletonList({ view = "list" }: { view?: LayoutMode }) {
     return () => window.removeEventListener("resize", update);
   }, [view]);
 
-  const itemClass = view === "grid" ? "h-[176px] rounded-2xl shimmer" : "h-12 rounded-2xl shimmer";
-  const containerClass = view === "grid" ? "grid gap-3" : "space-y-2";
+  const itemClass = isMultiColLayout(view) ? "h-[176px] rounded-2xl shimmer" : "h-12 rounded-2xl shimmer";
+  const containerClass = isMultiColLayout(view) ? "grid gap-3" : "space-y-2";
   const containerStyle =
-    view === "grid" ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined;
+    isMultiColLayout(view) ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined;
 
   return (
     <div ref={wrapRef} className="h-full">
