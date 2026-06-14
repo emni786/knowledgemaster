@@ -144,9 +144,9 @@ function DashboardPage() {
               </Button>
             </Header>
             {collectionsQuery.isLoading ? (
-              <div className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-border/60 bg-card/40">Loading collections…</div>
+              <div data-card data-morph="paper" className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-border/60">Loading collections…</div>
             ) : (collectionsQuery.data ?? []).length === 0 ? (
-              <div className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-dashed border-border/60 bg-card/40">
+              <div data-card data-morph="paper" className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-dashed border-border/60">
                 No collections yet. Create one from the Library to organize related links.
               </div>
             ) : (
@@ -155,7 +155,8 @@ function DashboardPage() {
                   <Link
                     key={c.id}
                     to="/library"
-                    className="group rounded-2xl border border-border/60 bg-card/40 p-4 hover:border-primary/40 hover:bg-card/60 transition-colors"
+                    data-card
+                    className="group rounded-2xl border border-border/60 p-4 hover:border-primary/40 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <FolderOpen className="h-4 w-4 text-primary/70" />
@@ -177,7 +178,7 @@ function DashboardPage() {
         <div className="space-y-8">
           <section className="space-y-3">
             <Header icon={TrendingUp} title="Ingest velocity" subtitle="Links saved per day over the last 14 days." />
-            <div className="rounded-2xl border border-border/60 bg-card/40 p-4 h-[280px]">
+            <div data-card data-morph="aurora" className="rounded-2xl border border-border/60 p-4 h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={series} margin={{ top: 10, right: 10, left: -16, bottom: 0 }}>
                   <defs>
@@ -225,7 +226,7 @@ function Stat({
     : tone === "muted" ? "text-muted-foreground"
     : "text-foreground";
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-4">
+    <div data-card data-morph="glass" className="rounded-2xl border border-border/60 p-4">
       <div className="flex items-center justify-between text-xs uppercase tracking-widest font-mono text-muted-foreground">
         <span>{label}</span>
         <Icon className={`h-4 w-4 ${toneCls}`} />
@@ -367,7 +368,7 @@ function RssFeedsSection() {
         subtitle="Subscribe to feeds and import new entries straight into your library."
       />
 
-      <div className="rounded-2xl border border-border/60 bg-card/40 p-4 space-y-4">
+      <div data-card data-morph="neu" className="rounded-2xl border border-border/60 p-4 space-y-4">
         <form onSubmit={handleAdd} className="flex gap-2">
           <Input
             type="url"
@@ -546,7 +547,7 @@ function computeCosmosStats(links: any[], clusters: boolean): CosmosStats {
 function CosmosStatsPanel({ stats, clusters }: { stats: CosmosStats; clusters: boolean }) {
   const maxCount = Math.max(1, ...stats.topTopics.map((t) => t.count));
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-5">
+    <div data-card data-morph="holo" className="rounded-2xl border border-border/60 p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-amber-300" /> Cosmos stats
@@ -618,7 +619,7 @@ function CosmosStatsPanel({ stats, clusters }: { stats: CosmosStats; clusters: b
 
 function MiniStat({ icon: Icon, label, value }: { icon: typeof Activity; label: string; value: number | string }) {
   return (
-    <div className="rounded-xl border border-border/40 bg-background/40 p-3">
+    <div data-card data-morph="clay" className="rounded-xl border border-border/40 p-3">
       <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
         <Icon className="h-3 w-3" /> {label}
       </div>
@@ -631,7 +632,8 @@ function QuickLink({ to, icon: Icon, label, hint }: { to: string; icon: typeof A
   return (
     <Link
       to={to}
-      className="group rounded-2xl border border-border/60 bg-card/40 p-4 hover:border-primary/40 hover:bg-card/60 transition-colors flex flex-col gap-2"
+      data-card
+      className="group rounded-2xl border border-border/60 p-4 hover:border-primary/40 transition-colors flex flex-col gap-2"
     >
       <div className="flex items-center justify-between">
         <Icon className="h-4 w-4 text-primary/70" />
