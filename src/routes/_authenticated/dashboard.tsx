@@ -256,7 +256,13 @@ function AnalyzeTopicsButton() {
   const qc = useQueryClient();
   const [mode, setMode] = useState<"missing" | "all">("missing");
   const m = useMutation({
-    mutationFn: (force: boolean) => fn({ data: { force } }),
+    mutationFn: async (force: boolean) => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.access_token) {
+        throw new Error("Your session expired. Please sign in again.");
+      }
+      return fn({ data: { force } });
+    },
     onSuccess: (res) => {
       toast.success(res.message);
       qc.invalidateQueries({ queryKey: ["links"] });
