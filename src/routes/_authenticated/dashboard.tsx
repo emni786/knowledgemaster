@@ -178,7 +178,7 @@ function DashboardPage() {
         <div className="space-y-8">
           <section className="space-y-3">
             <Header icon={TrendingUp} title="Ingest velocity" subtitle="Links saved per day over the last 14 days." />
-            <div className="rounded-2xl border border-border/60 bg-card/40 p-4 h-[280px]">
+            <div data-card data-morph="aurora" className="rounded-2xl border border-border/60 p-4 h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={series} margin={{ top: 10, right: 10, left: -16, bottom: 0 }}>
                   <defs>
