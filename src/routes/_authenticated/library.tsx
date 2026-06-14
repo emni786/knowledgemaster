@@ -547,6 +547,7 @@ function LibraryPage() {
                   selected={selected}
                   onSelect={handleSelectLink}
                   onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+                  onRetry={(id) => retryMut.mutate(id)}
                 />
               )}
             </div>
