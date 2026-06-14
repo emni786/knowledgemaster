@@ -28,7 +28,7 @@ import { useLocalStorage } from "@/lib/local-storage";
 import { faviconFor, getDomain, normalizeUrl } from "@/lib/url";
 import {
   fetchLinks, addLinks, updateLink, softDeleteLink, softDeleteMany,
-  togglePin, retryAnalysis, restoreLink, permanentlyDelete, emptyTrash, bulkAddTag,
+  togglePin, retryAnalysis, retryPendingAnalysis, restoreLink, permanentlyDelete, emptyTrash, bulkAddTag,
 } from "@/lib/api/links";
 import { fetchCollections, createCollection, deleteCollection } from "@/lib/api/collections";
 import type { LinkRow, FilterState, ContentType, LinkStatus } from "@/lib/types";
@@ -265,6 +265,17 @@ function LibraryPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const pendingIds = useMemo(() => allLinks.filter((l) => !l.deleted_at && l.status === "pending").map((l) => l.id), [allLinks]);
+
+  const retryPendingMut = useMutation({
+    mutationFn: () => retryPendingAnalysis(pendingIds),
+    onSuccess: (count) => {
+      qc.invalidateQueries({ queryKey: ["links"] });
+      toast.success(`Re-analyzing ${count} pending link${count === 1 ? "" : "s"}`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const handleAdd = useCallback((raw: string) => {
     const urls = Array.from(new Set(
       raw.split(/[\s,]+/).map((s) => s.trim()).filter((s) => /^https?:\/\//.test(s))
@@ -495,6 +506,9 @@ function LibraryPage() {
               onExport={handleExport}
               onRefresh={refreshLinks}
               onOpenFilters={openFilters}
+              pendingCount={pendingIds.length}
+              onRetryPending={() => retryPendingMut.mutate()}
+              retryPendingPending={retryPendingMut.isPending}
             />
 
             <div className="sticky top-[120px] z-10 bg-background/80 backdrop-blur border-b border-border/50 px-6">
@@ -578,6 +592,12 @@ function LibraryPage() {
               <StatCard label="Ready" value={stats.ready} tone="primary" />
               <StatCard label="Pending" value={stats.pending} tone="muted" />
             </div>
+            {pendingIds.length > 0 && (
+              <Button variant="outline" size="sm" className="w-full h-9 font-mono text-xs gap-1.5" onClick={() => retryPendingMut.mutate()} disabled={retryPendingMut.isPending}>
+                {retryPendingMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                Analyze {pendingIds.length} pending
+              </Button>
+            )}
             {linksQuery.isLoading ? <SkeletonList /> : visible.length === 0 ? <EmptyState /> : (
             <VirtualFlatList
                 links={visible}
@@ -682,6 +702,9 @@ type CenterToolbarProps = {
   onExport: (format: "json" | "csv" | "txt") => void;
   onRefresh: () => void;
   onOpenFilters: () => void;
+  pendingCount: number;
+  onRetryPending: () => void;
+  retryPendingPending: boolean;
 };
 
 
@@ -690,6 +713,7 @@ const CenterToolbar = memo(forwardRef<HTMLInputElement, CenterToolbarProps>(func
   {
     query, onQueryChange, view, setView, showNumbers, setShowNumbers,
     selectMode, setSelectMode, onAdd, addPending, onSmartSearch, onImport, onExport, onRefresh, onOpenFilters,
+    pendingCount, onRetryPending, retryPendingPending,
   },
   ref,
 ) {
@@ -767,6 +791,17 @@ const CenterToolbar = memo(forwardRef<HTMLInputElement, CenterToolbarProps>(func
             </TooltipTrigger>
             <TooltipContent>Link health</TooltipContent>
           </Tooltip>
+          {pendingCount > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 font-mono text-xs gap-1.5" onClick={onRetryPending} disabled={retryPendingPending}>
+                  {retryPendingPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                  Analyze {pendingCount}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Re-analyze all pending links</TooltipContent>
+            </Tooltip>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onRefresh}>

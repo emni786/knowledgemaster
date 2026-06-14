@@ -72,6 +72,11 @@ export async function retryAnalysis(id: string): Promise<void> {
   await reanalyzeLink({ data: { id } });
 }
 
+export async function retryPendingAnalysis(ids: string[]): Promise<number> {
+  await Promise.all(ids.map((id) => reanalyzeLink({ data: { id } })));
+  return ids.length;
+}
+
 export async function bulkAddTag(ids: string[], tag: string): Promise<void> {
   // fetch existing tags then merge
   const { data, error } = await supabase
