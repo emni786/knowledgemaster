@@ -9,6 +9,7 @@ import {
   X, ExternalLink, Star, RotateCcw, MoreHorizontal, Filter, FileText,
   Video, Github, BookOpen, Wrench, MessagesSquare, HelpCircle, Inbox,
   Upload, Download, Tag, Keyboard, AlertCircle, Loader2, Menu,
+  Rows3, Columns3, Table as TableIcon, GalleryThumbnails, GalleryHorizontal, ChevronDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
