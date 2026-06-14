@@ -111,6 +111,8 @@ function DashboardPage() {
             <Stat icon={AlertTriangle} label="Failed" value={stats.failed} loading={isLoading} tone={stats.failed ? "destructive" : "muted"} />
           </div>
 
+          <KnowledgePulse links={links} />
+
           <section className="space-y-3">
             <Header
               icon={Activity}
