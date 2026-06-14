@@ -562,3 +562,190 @@
   .lib-morph :is([data-morph="holo"], [data-card]:nth-of-type(8n+6)),
   .lib-morph :is([data-morph="metal"], [data-card]:nth-of-type(8n+8)) { animation: none !important; }
 }
+
+/* ============================================================
+   Global Smooth Animations & Transitions
+   ============================================================ */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.995); filter: blur(2px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes stagger-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes soft-pop {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+@keyframes sheen {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(220%) skewX(-18deg); }
+}
+@keyframes bg-drift {
+  0%, 100% { background-position: 0% 50%, 100% 50%; }
+  50%      { background-position: 100% 50%, 0% 50%; }
+}
+
+/* Page-level transition on route change */
+.page-transition {
+  animation: page-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+/* Smooth global defaults — every interactive surface eases */
+*, *::before, *::after {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Common containers auto-fade on mount */
+main, section, article, [role="dialog"], [role="tabpanel"] {
+  animation: page-in 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Cards: smooth lift + tilt + animated sheen */
+[data-card] {
+  transition:
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 280ms ease,
+    background 380ms ease,
+    filter 280ms ease !important;
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+[data-card]:hover {
+  transform: translateY(-3px) scale(1.005);
+  filter: brightness(1.05);
+}
+[data-card]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg,
+    transparent 30%,
+    color-mix(in oklab, hsl(var(--foreground)) 10%, transparent) 50%,
+    transparent 70%);
+  transform: translateX(-120%) skewX(-18deg);
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+[data-card]:hover::after {
+  opacity: 1;
+  animation: sheen 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Buttons — bouncy press and soft hover lift */
+button, [role="button"], a[href] {
+  transition:
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 280ms ease,
+    opacity 220ms ease,
+    filter 220ms ease !important;
+}
+button:hover:not(:disabled), [role="button"]:hover:not([aria-disabled="true"]) {
+  transform: translateY(-1.5px);
+}
+button:active:not(:disabled), [role="button"]:active:not([aria-disabled="true"]) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 80ms !important;
+}
+
+/* Inputs focus glow ripple */
+input, textarea, select, [role="combobox"] {
+  transition:
+    border-color 220ms ease,
+    box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms ease,
+    transform 220ms ease !important;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  transform: translateY(-1px);
+}
+
+/* Nav links — story underline */
+nav a, [role="navigation"] a {
+  position: relative;
+}
+nav a::after, [role="navigation"] a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent,
+    hsl(var(--primary)),
+    transparent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 2px;
+}
+nav a:hover::after, [role="navigation"] a:hover::after,
+nav a[data-status="active"]::after, [role="navigation"] a[data-status="active"]::after {
+  transform: scaleX(1);
+}
+
+/* Icons gently rotate/scale on parent hover */
+button:hover svg, a:hover svg, [role="button"]:hover svg {
+  transform: scale(1.08);
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+svg { transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Dialogs / popovers / sheets — smoother enter */
+[data-state="open"][data-side],
+[data-state="open"][role="dialog"],
+[data-state="open"][data-radix-popper-content-wrapper] > * {
+  animation: soft-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger children of grids/lists on mount */
+[data-stagger] > *,
+main > section > .grid > *,
+main > .grid > * {
+  animation: stagger-up 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+[data-stagger] > *:nth-child(1), main > section > .grid > *:nth-child(1), main > .grid > *:nth-child(1) { animation-delay: 40ms; }
+[data-stagger] > *:nth-child(2), main > section > .grid > *:nth-child(2), main > .grid > *:nth-child(2) { animation-delay: 90ms; }
+[data-stagger] > *:nth-child(3), main > section > .grid > *:nth-child(3), main > .grid > *:nth-child(3) { animation-delay: 140ms; }
+[data-stagger] > *:nth-child(4), main > section > .grid > *:nth-child(4), main > .grid > *:nth-child(4) { animation-delay: 190ms; }
+[data-stagger] > *:nth-child(5), main > section > .grid > *:nth-child(5), main > .grid > *:nth-child(5) { animation-delay: 240ms; }
+[data-stagger] > *:nth-child(6), main > section > .grid > *:nth-child(6), main > .grid > *:nth-child(6) { animation-delay: 290ms; }
+[data-stagger] > *:nth-child(n+7), main > section > .grid > *:nth-child(n+7), main > .grid > *:nth-child(n+7) { animation-delay: 340ms; }
+
+/* Ambient slow drift on the morphism backdrop */
+.lib-morph {
+  background-size: 200% 200%, 200% 200%, 100% 100%;
+  animation: bg-drift 28s ease-in-out infinite;
+}
+
+/* Tabs — smooth indicator switch */
+[role="tab"] {
+  transition: color 240ms ease, background-color 240ms ease, transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+[role="tab"][data-state="active"] { transform: translateY(-1px); }
+
+/* Images — fade in when they load */
+img { transition: opacity 420ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1), filter 420ms ease; }
+img:hover { filter: saturate(1.1); }
+
+/* Respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  .page-transition,
+  main, section, article,
+  [data-stagger] > *,
+  main > section > .grid > *,
+  main > .grid > *,
+  .lib-morph,
+  [data-card]::after {
+    animation: none !important;
+  }
+  [data-card]:hover, button:hover, a:hover, [role="button"]:hover { transform: none !important; }
+}
