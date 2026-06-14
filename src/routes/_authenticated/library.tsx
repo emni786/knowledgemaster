@@ -1124,7 +1124,7 @@ function VirtualLinkList({
               </div>
             ) : (
               <div
-                className={view === "grid" ? "grid gap-3 pb-3" : "pb-1.5"}
+                className={view === "grid" ? "grid gap-4 pb-4" : "pb-2"}
                 style={view === "grid" ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined}
               >
                 {row.items.map((l, ix) => (
