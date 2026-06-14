@@ -1205,12 +1205,13 @@ function LinkGrid({
           view={view}
           showNumbers={showNumbers}
           selected={selected === l.id}
-          onSelect={() => onSelect(l.id)}
-          onPin={(p) => onPin(l.id, p)}
-          selectMode={selectMode}
-          isChecked={selectedIds.has(l.id)}
-          onCheck={() => toggleSelected(l.id)}
-        />
+              onSelect={() => onSelect(l.id)}
+              onPin={(p) => onPin(l.id, p)}
+              onRetry={() => {}}
+              selectMode={selectMode}
+              isChecked={selectedIds.has(l.id)}
+              onCheck={() => toggleSelected(l.id)}
+            />
       ))}
     </div>
   );
