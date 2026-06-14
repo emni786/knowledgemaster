@@ -785,6 +785,17 @@ const CenterToolbar = memo(forwardRef<HTMLInputElement, CenterToolbarProps>(func
             </TooltipTrigger>
             <TooltipContent>Link health</TooltipContent>
           </Tooltip>
+          {pendingCount > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 font-mono text-xs gap-1.5" onClick={onRetryPending} disabled={retryPendingPending}>
+                  {retryPendingPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                  Analyze {pendingCount}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Re-analyze all pending links</TooltipContent>
+            </Tooltip>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/10 hover:text-primary" onClick={onRefresh}>
