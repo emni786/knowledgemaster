@@ -82,7 +82,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head><HeadContent /></head>
-      <body>
+      <body className="lib-morph">
         {children}
         <Scripts />
       </body>
