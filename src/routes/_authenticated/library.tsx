@@ -1078,15 +1078,17 @@ function VirtualLinkList({
   const viewRef = useRef(view);
   viewRef.current = view;
 
-  const ROW_HEIGHT_LIST = 80;
-  const ROW_HEIGHT_GRID = 208;
+  const ROW_HEIGHTS: Record<LayoutMode, number> = {
+    list: 80, compact: 52, grid: 208, thumbnails: 312,
+    masonry: 80, table: 56, cover: 240,
+  };
   const HEADER_HEIGHT = 40;
 
   const estimateSize = useCallback((i: number) => {
     const r = vrowsRef.current[i];
-    if (!r) return viewRef.current === "grid" ? ROW_HEIGHT_GRID : ROW_HEIGHT_LIST;
+    if (!r) return ROW_HEIGHTS[viewRef.current];
     if (r.kind === "header") return HEADER_HEIGHT;
-    return viewRef.current === "grid" ? ROW_HEIGHT_GRID : ROW_HEIGHT_LIST;
+    return ROW_HEIGHTS[viewRef.current];
   }, []);
 
   const getItemKey = useCallback((i: number) => vrowsRef.current[i].key, []);
