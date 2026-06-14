@@ -961,7 +961,7 @@ type VRow =
   | { kind: "row"; key: string; items: LinkRow[]; offset: number };
 
 function VirtualLinkList({
-  scrollParentRef, groups, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin,
+  scrollParentRef, groups, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
 }: {
   scrollParentRef: React.RefObject<HTMLDivElement | null>;
   groups: Groups;
@@ -973,6 +973,7 @@ function VirtualLinkList({
   selected: string | null;
   onSelect: (id: string) => void;
   onPin: (id: string, p: boolean) => void;
+  onRetry: (id: string) => void;
 }) {
   const cols = useGridColCount(view);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
@@ -1117,12 +1118,13 @@ function VirtualLinkList({
 }
 
 function VirtualFlatList({
-  links, selected, onSelect, onPin,
+  links, selected, onSelect, onPin, onRetry,
 }: {
   links: LinkRow[];
   selected: string | null;
   onSelect: (id: string) => void;
   onPin: (id: string, p: boolean) => void;
+  onRetry: (id: string) => void;
 }) {
   const linksRef = useRef(links);
   linksRef.current = links;
@@ -1185,11 +1187,12 @@ function VirtualFlatList({
 }
 
 function LinkGrid({
-  links, view, showNumbers, numberOffset, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin,
+  links, view, showNumbers, numberOffset, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
 }: {
   links: LinkRow[]; view: "list" | "grid"; showNumbers: boolean; numberOffset: number;
   selectMode: boolean; selectedIds: Set<string>; toggleSelected: (id: string) => void;
   selected: string | null; onSelect: (id: string) => void; onPin: (id: string, p: boolean) => void;
+  onRetry: (id: string) => void;
 }) {
   return (
     <div className={view === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" : "space-y-1.5"}>
@@ -1376,6 +1379,7 @@ function DetailPanel({
 }: {
   link: LinkRow; onClose: () => void;
   onDelete: (id: string) => void; onPin: (id: string, p: boolean) => void;
+  onRetry: (id: string) => void;
   onRetry: (id: string) => void; onUpdate: (id: string, patch: Partial<LinkRow>) => Promise<void>;
   allLinks: LinkRow[];
 }) {
