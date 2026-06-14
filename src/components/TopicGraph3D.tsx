@@ -137,7 +137,9 @@ function buildPlanetObject(node: GNode, highlighted: boolean) {
   // Label
   const sprite = new SpriteText(node.label);
   sprite.color = "#e2e8f0";
-  sprite.backgroundColor = false as unknown as string;
+  sprite.backgroundColor = "rgba(0,0,0,0)";
+  (sprite as any).padding = 0;
+  (sprite as any).borderWidth = 0;
   sprite.textHeight = Math.max(2, nucleusR * 0.7);
   sprite.fontFace = "Inter, ui-sans-serif, system-ui";
   sprite.fontWeight = "600";
@@ -319,6 +321,17 @@ export function TopicGraph3D({
     try {
       fg.d3Force?.("charge")?.strength?.(-110);
       fg.d3Force?.("link")?.distance?.((l: any) => 40 + 80 / Math.max(1, l.value));
+      // Strengthen the built-in center force so the graph always settles at the origin.
+      fg.d3Force?.("center")?.strength?.(1);
+    } catch {}
+    try {
+      // Lock OrbitControls so the camera always orbits the scene origin — no panning off-center.
+      const controls = fg.controls?.();
+      if (controls) {
+        controls.enablePan = false;
+        controls.target?.set?.(0, 0, 0);
+        controls.update?.();
+      }
       // Starfield background scene
       const scene = fg.scene?.();
       if (scene && !scene.userData._starfield) {
