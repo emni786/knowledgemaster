@@ -34,7 +34,7 @@ function Ticker({ links }: { links: LinkRow[] }) {
   if (links.length === 0) return null;
   const loop = [...links, ...links];
   return (
-    <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-primary/10 via-card/40 to-primary/10 overflow-hidden">
+    <div data-card data-morph="aurora" className="rounded-2xl border border-border/60 overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-2 border-b border-border/40 text-[10px] font-mono uppercase tracking-widest text-primary">
         <Radio className="h-3 w-3 animate-pulse" /> Live pulse
       </div>
@@ -81,13 +81,13 @@ function Ticker({ links }: { links: LinkRow[] }) {
 function Feed({ links }: { links: LinkRow[] }) {
   if (links.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-8 text-center text-sm text-muted-foreground">
+      <div data-card data-morph="paper" className="rounded-2xl border border-dashed border-border/60 p-8 text-center text-sm text-muted-foreground">
         Your knowledge feed is waiting — save a link to light it up.
       </div>
     );
   }
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40">
+    <div data-card data-morph="glass" className="rounded-2xl border border-border/60">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
         <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-primary" /> Knowledge feed
@@ -196,7 +196,7 @@ function NuggetPopup({ pool }: { pool: LinkRow[] }) {
       key={l.id}
       className="fixed bottom-6 right-6 z-40 w-[320px] max-w-[calc(100vw-2rem)] animate-fade-in"
     >
-      <div className="relative rounded-2xl border border-primary/40 bg-card/95 backdrop-blur-xl shadow-2xl shadow-primary/20 p-4">
+      <div data-card data-morph="holo" className="relative rounded-2xl border border-primary/40 shadow-2xl shadow-primary/20 p-4">
         <div className="absolute -top-2 left-4 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-mono uppercase tracking-widest flex items-center gap-1">
           <Shuffle className="h-2.5 w-2.5" /> Knowledge nugget
         </div>
