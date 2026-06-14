@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { KnowledgePulse } from "@/components/KnowledgePulse";
+import { LinksGraph } from "@/components/LinksGraph";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
@@ -168,6 +169,11 @@ function DashboardPage() {
                 ))}
               </div>
             )}
+          </section>
+
+          <section className="space-y-3">
+            <Header icon={Network} title="Link graph" subtitle="Domains as hubs, links as satellites — edges connect links that share a tag." />
+            <LinksGraph links={links} />
           </section>
 
           <KnowledgePulse links={links} />
