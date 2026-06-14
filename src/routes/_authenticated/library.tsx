@@ -1058,8 +1058,8 @@ function VirtualLinkList({
   const viewRef = useRef(view);
   viewRef.current = view;
 
-  const ROW_HEIGHT_LIST = 84;
-  const ROW_HEIGHT_GRID = 188;
+  const ROW_HEIGHT_LIST = 80;
+  const ROW_HEIGHT_GRID = 208;
   const HEADER_HEIGHT = 40;
 
   const estimateSize = useCallback((i: number) => {
