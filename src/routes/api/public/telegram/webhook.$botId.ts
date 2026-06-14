@@ -103,7 +103,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook/$botId")({
         if (!msg) return Response.json({ ok: true });
 
         const text = `${msg.text ?? ""} ${msg.caption ?? ""}`.trim();
-        const entityUrls = (msg.entities ?? [])
+        const entityUrls = [...(msg.entities ?? []), ...(msg.caption_entities ?? [])]
           .filter((e) => e.type === "url" || e.type === "text_link")
           .map((e) => e.url)
           .filter((u): u is string => Boolean(u));
