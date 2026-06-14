@@ -82,7 +82,7 @@ function Page() {
             <SectionTitle>Themes</SectionTitle>
             <div className="grid gap-3 md:grid-cols-2">
               {digest.themes.map((t, i) => (
-                <article key={i} className="rounded-2xl border border-border/60 bg-card/40 p-5">
+                <article data-card key={i} className="rounded-2xl border border-border/60 p-5">
                   <h4 className="font-display text-lg font-semibold">{t.title}</h4>
                   <p className="mt-2 text-sm text-muted-foreground">{t.summary}</p>
                   {t.linkIds.length > 0 && (
