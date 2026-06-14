@@ -202,7 +202,7 @@ function DashboardPage() {
           <section className="space-y-3">
 
             <Header icon={Sparkles} title="Cosmos breakdown" subtitle="Top topics, edges, and group composition for your current graph." />
-            <CosmosStatsPanel stats={cosmosStats} clusters={clusters} />
+            <CosmosStatsPanel stats={cosmosStats} clusters={false} />
           </section>
         </div>
       )}
