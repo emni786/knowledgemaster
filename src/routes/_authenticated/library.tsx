@@ -9,6 +9,7 @@ import {
   X, ExternalLink, Star, RotateCcw, MoreHorizontal, Filter, FileText,
   Video, Github, BookOpen, Wrench, MessagesSquare, HelpCircle, Inbox,
   Upload, Download, Tag, Keyboard, AlertCircle, Loader2, Menu,
+  Rows3, Columns3, Table as TableIcon, GalleryThumbnails, GalleryHorizontal, ChevronDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -50,6 +51,26 @@ export const Route = createFileRoute("/_authenticated/library")({
 const TYPE_ICON: Record<ContentType, typeof FileText> = {
   article: FileText, video: Video, repo: Github, docs: BookOpen,
   tool: Wrench, thread: MessagesSquare, other: LibraryIcon,
+};
+
+type LayoutMode = "list" | "compact" | "grid" | "thumbnails" | "masonry" | "table" | "cover";
+
+const LAYOUTS: { id: LayoutMode; label: string; icon: typeof List; desc: string }[] = [
+  { id: "list",       label: "List",        icon: List,              desc: "Detailed single-line rows" },
+  { id: "compact",    label: "Compact",     icon: Rows3,             desc: "Dense title-only rows" },
+  { id: "grid",       label: "Grid",        icon: LayoutGrid,        desc: "Uniform card grid" },
+  { id: "thumbnails", label: "Thumbnails",  icon: GalleryThumbnails, desc: "Large preview cards" },
+  { id: "masonry",    label: "Masonry",     icon: Columns3,          desc: "Pinterest-style columns" },
+  { id: "table",      label: "Table",       icon: TableIcon,         desc: "Tabular columns" },
+  { id: "cover",      label: "Cover flow",  icon: GalleryHorizontal, desc: "Horizontal carousel" },
+];
+const PRIMARY_LAYOUTS: LayoutMode[] = ["list", "grid", "masonry", "table"];
+
+const isVirtualLayout = (v: LayoutMode) => v === "list" || v === "compact" || v === "grid" || v === "thumbnails";
+const isMultiColLayout = (v: LayoutMode) => v === "grid" || v === "thumbnails";
+const cycleLayout = (v: LayoutMode): LayoutMode => {
+  const i = LAYOUTS.findIndex((l) => l.id === v);
+  return LAYOUTS[(i + 1) % LAYOUTS.length].id;
 };
 
 const TYPE_DESCRIPTION: Record<ContentType, string> = {
@@ -96,7 +117,7 @@ function LibraryPage() {
   const desktopScrollRef = useRef<HTMLDivElement | null>(null);
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [collapsed, setCollapsed] = useLocalStorage("xn:sidebar-collapsed", false);
-  const [view, setView] = useLocalStorage<"list" | "grid">("xn:view", "list");
+  const [view, setView] = useLocalStorage<LayoutMode>("xn:view", "list");
   const [showNumbers, setShowNumbers] = useLocalStorage("xn:numbers", false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [searchInput, setSearchInput] = useState("");
@@ -361,7 +382,7 @@ function LibraryPage() {
       }
       if (e.key === "/") { e.preventDefault(); searchRef.current?.focus(); }
       else if (e.key === "?") { e.preventDefault(); setShortcutsOpen(true); }
-      else if (e.key === "g") { e.preventDefault(); setView(view === "list" ? "grid" : "list"); }
+      else if (e.key === "g") { e.preventDefault(); setView(cycleLayout(view)); }
       else if (e.key === "Escape") { setSelected(null); setMobileDetailOpen(false); }
       else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
@@ -549,10 +570,23 @@ function LibraryPage() {
                 <SkeletonList view={view} />
               ) : visible.length === 0 ? (
                 <EmptyState />
-              ) : (
+              ) : isVirtualLayout(view) ? (
                 <VirtualLinkList
                   scrollParentRef={desktopScrollRef}
                   groups={groups}
+                  view={view}
+                  showNumbers={showNumbers}
+                  selectMode={selectMode}
+                  selectedIds={selectedIds}
+                  toggleSelected={toggleSelected}
+                  selected={selected}
+                  onSelect={handleSelectLink}
+                  onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+                  onRetry={(id) => retryMut.mutate(id)}
+                />
+              ) : (
+                <NonVirtualLinkList
+                  links={visible}
                   view={view}
                   showNumbers={showNumbers}
                   selectMode={selectMode}
@@ -689,8 +723,8 @@ function MobileHeader({ email, onAdd, onSignOut }: { email?: string; onAdd: (raw
 type CenterToolbarProps = {
   query: string;
   onQueryChange: (v: string) => void;
-  view: "list" | "grid";
-  setView: (v: "list" | "grid") => void;
+  view: LayoutMode;
+  setView: (v: LayoutMode) => void;
   showNumbers: boolean;
   setShowNumbers: (v: boolean) => void;
   selectMode: boolean;
@@ -732,22 +766,58 @@ const CenterToolbar = memo(forwardRef<HTMLInputElement, CenterToolbarProps>(func
           />
         </div>
         <div className="flex items-center gap-1 ml-auto">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant={view === "list" ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setView("list")}>
-                <List className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>List view</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant={view === "grid" ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setView("grid")}>
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Grid view (g)</TooltipContent>
-          </Tooltip>
+          <div className="flex items-center rounded-xl border border-border/50 bg-background/40 p-0.5">
+            {LAYOUTS.filter((l) => PRIMARY_LAYOUTS.includes(l.id)).map((l) => {
+              const Icon = l.icon;
+              return (
+                <Tooltip key={l.id}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={view === l.id ? "secondary" : "ghost"}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setView(l.id)}
+                      aria-label={l.label}
+                      aria-pressed={view === l.id}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{l.label} — {l.desc}</TooltipContent>
+                </Tooltip>
+              );
+            })}
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More layouts">
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>All layouts (g cycles)</TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" className="w-56">
+                {LAYOUTS.map((l) => {
+                  const Icon = l.icon;
+                  return (
+                    <DropdownMenuItem
+                      key={l.id}
+                      onClick={() => setView(l.id)}
+                      className={view === l.id ? "bg-accent/60" : ""}
+                    >
+                      <Icon className="h-4 w-4 mr-2 text-primary/80" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{l.label}</span>
+                        <span className="text-[10px] text-muted-foreground">{l.desc}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant={showNumbers ? "secondary" : "ghost"} size="icon" className="h-9 w-9" onClick={() => setShowNumbers(!showNumbers)}>
@@ -970,37 +1040,98 @@ function Section({ title, count, icon: Icon, iconClass, children }: { title: str
 
 type Groups = { ready: LinkRow[]; pending: LinkRow[]; failed: LinkRow[] };
 
-function useGridColCount(view: "list" | "grid") {
-  const [cols, setCols] = useState(() => {
-    if (view === "list") return 1;
+function useGridColCount(view: LayoutMode) {
+  const compute = useCallback(() => {
+    if (!isMultiColLayout(view)) return 1;
     if (typeof window === "undefined") return 3;
-    if (window.matchMedia("(min-width: 1280px)").matches) return 3;
-    if (window.matchMedia("(min-width: 768px)").matches) return 2;
-    return 1;
-  });
-  useEffect(() => {
-    if (view === "list") { setCols(1); return; }
-    const mq2 = window.matchMedia("(min-width: 768px)");
-    const mq3 = window.matchMedia("(min-width: 1280px)");
-    const update = () => setCols(mq3.matches ? 3 : mq2.matches ? 2 : 1);
-    update();
-    mq2.addEventListener("change", update);
-    mq3.addEventListener("change", update);
-    return () => { mq2.removeEventListener("change", update); mq3.removeEventListener("change", update); };
+    const w = window.innerWidth;
+    if (view === "thumbnails") {
+      return w >= 1536 ? 3 : w >= 900 ? 2 : 1;
+    }
+    return w >= 1280 ? 3 : w >= 768 ? 2 : 1;
   }, [view]);
+  const [cols, setCols] = useState(compute);
+  useEffect(() => {
+    const update = () => setCols(compute());
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [compute]);
   return cols;
 }
 
 type VRow =
   | { kind: "header"; key: string; title: string; count: number; section: "ready" | "pending" | "failed" }
   | { kind: "row"; key: string; items: LinkRow[]; offset: number };
+function NonVirtualLinkList({
+  links, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
+}: {
+  links: LinkRow[]; view: LayoutMode; showNumbers: boolean;
+  selectMode: boolean; selectedIds: Set<string>; toggleSelected: (id: string) => void;
+  selected: string | null; onSelect: (id: string) => void;
+  onPin: (id: string, p: boolean) => void; onRetry: (id: string) => void;
+}) {
+  const card = (l: LinkRow, i: number) => (
+    <LinkCard
+      key={l.id}
+      link={l}
+      index={i + 1}
+      view={view}
+      showNumbers={showNumbers}
+      selected={selected === l.id}
+      onSelect={() => onSelect(l.id)}
+      onPin={(p) => onPin(l.id, p)}
+      onRetry={() => onRetry(l.id)}
+      selectMode={selectMode}
+      isChecked={selectedIds.has(l.id)}
+      onCheck={() => toggleSelected(l.id)}
+    />
+  );
+
+  if (view === "masonry") {
+    return (
+      <div className="columns-1 md:columns-2 xl:columns-3 gap-4 [column-fill:_balance]">
+        {links.map((l, i) => card(l, i))}
+      </div>
+    );
+  }
+  if (view === "table") {
+    return (
+      <div className="space-y-1.5">
+        <div className="grid grid-cols-[auto_minmax(0,2.4fr)_minmax(0,1fr)_auto_auto_auto] items-center gap-3 px-3 h-8 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border/50">
+          <span></span>
+          <span>Title</span>
+          <span>Domain</span>
+          <span>Type</span>
+          <span className="hidden md:block">Status</span>
+          <span className="hidden lg:block">Saved</span>
+        </div>
+        {links.map((l, i) => card(l, i))}
+      </div>
+    );
+  }
+  if (view === "cover") {
+    return (
+      <div className="overflow-x-auto scrollbar-thin pb-4 -mx-6 px-6 snap-x snap-mandatory">
+        <div className="flex gap-4">
+          {links.map((l, i) => (
+            <div key={l.id} className="snap-start">
+              {card(l, i)}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return <div className="space-y-2">{links.map((l, i) => card(l, i))}</div>;
+}
 
 function VirtualLinkList({
   scrollParentRef, groups, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
 }: {
   scrollParentRef: React.RefObject<HTMLDivElement | null>;
   groups: Groups;
-  view: "list" | "grid";
+  view: LayoutMode;
   showNumbers: boolean;
   selectMode: boolean;
   selectedIds: Set<string>;
@@ -1058,15 +1189,17 @@ function VirtualLinkList({
   const viewRef = useRef(view);
   viewRef.current = view;
 
-  const ROW_HEIGHT_LIST = 80;
-  const ROW_HEIGHT_GRID = 208;
+  const ROW_HEIGHTS: Record<LayoutMode, number> = {
+    list: 80, compact: 52, grid: 208, thumbnails: 312,
+    masonry: 80, table: 56, cover: 240,
+  };
   const HEADER_HEIGHT = 40;
 
   const estimateSize = useCallback((i: number) => {
     const r = vrowsRef.current[i];
-    if (!r) return viewRef.current === "grid" ? ROW_HEIGHT_GRID : ROW_HEIGHT_LIST;
+    if (!r) return ROW_HEIGHTS[viewRef.current];
     if (r.kind === "header") return HEADER_HEIGHT;
-    return viewRef.current === "grid" ? ROW_HEIGHT_GRID : ROW_HEIGHT_LIST;
+    return ROW_HEIGHTS[viewRef.current];
   }, []);
 
   const getItemKey = useCallback((i: number) => vrowsRef.current[i].key, []);
@@ -1124,8 +1257,8 @@ function VirtualLinkList({
               </div>
             ) : (
               <div
-                className={view === "grid" ? "grid gap-4 pb-4" : "pb-2"}
-                style={view === "grid" ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined}
+                className={isMultiColLayout(view) ? "grid gap-4 pb-4" : "pb-2"}
+                style={isMultiColLayout(view) ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined}
               >
                 {row.items.map((l, ix) => (
                   <LinkCard
@@ -1225,7 +1358,7 @@ function VirtualFlatList({
 function LinkGrid({
   links, view, showNumbers, numberOffset, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
 }: {
-  links: LinkRow[]; view: "list" | "grid"; showNumbers: boolean; numberOffset: number;
+  links: LinkRow[]; view: LayoutMode; showNumbers: boolean; numberOffset: number;
   selectMode: boolean; selectedIds: Set<string>; toggleSelected: (id: string) => void;
   selected: string | null; onSelect: (id: string) => void; onPin: (id: string, p: boolean) => void;
   onRetry: (id: string) => void;
@@ -1253,7 +1386,7 @@ function LinkGrid({
 }
 
 type LinkCardProps = {
-  link: LinkRow; index: number; view: "list" | "grid"; showNumbers: boolean;
+  link: LinkRow; index: number; view: LayoutMode; showNumbers: boolean;
   selected: boolean; onSelect: () => void; onPin: (p: boolean) => void;
   onRetry: () => void;
   selectMode: boolean; isChecked: boolean; onCheck: () => void;
@@ -1297,7 +1430,69 @@ const LinkCard = memo(function LinkCard({
   }, [selected]);
   const flashClass = flash ? "xn-flash" : "";
 
-  if (view === "grid") {
+  // Compact row — single dense line, title only
+  if (view === "compact") {
+    return (
+      <div
+        ref={ref as React.RefObject<HTMLDivElement>}
+        data-link-row
+        data-morph={morph.style}
+        style={morphStyle}
+        onClick={selectMode ? onCheck : onSelect}
+        role="button"
+        tabIndex={0}
+        aria-selected={selected}
+        data-selected={selected ? "true" : undefined}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (selectMode ? onCheck : onSelect)(); } }}
+        className={`group relative overflow-hidden flex items-center gap-2.5 border px-3 h-11 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40" : "border-border/50"} ${flashClass}`}
+      >
+        {selectMode && <Checkbox checked={isChecked} />}
+        {showNumbers && <span className="font-mono text-[10px] text-muted-foreground w-6 text-right shrink-0">{index}.</span>}
+        <img src={faviconFor(link.url)} alt="" className="h-4 w-4 rounded shrink-0" loading="lazy" />
+        <a
+          href={link.url} target="_blank" rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="font-medium text-sm truncate hover:underline flex-1 min-w-0"
+        >{link.title || link.url}</a>
+        {link.pinned && <Pin className="h-3 w-3 text-primary fill-primary shrink-0" />}
+        <span className="font-mono text-[10px] text-muted-foreground/60 hidden sm:block shrink-0">{domain}</span>
+        <TypeIcon type={link.content_type} className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+      </div>
+    );
+  }
+
+  // Table row — semantic columns
+  if (view === "table") {
+    return (
+      <div
+        ref={ref as React.RefObject<HTMLDivElement>}
+        data-link-row
+        data-morph={morph.style}
+        style={morphStyle}
+        onClick={selectMode ? onCheck : onSelect}
+        role="button"
+        tabIndex={0}
+        aria-selected={selected}
+        data-selected={selected ? "true" : undefined}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (selectMode ? onCheck : onSelect)(); } }}
+        className={`group relative overflow-hidden grid grid-cols-[auto_minmax(0,2.4fr)_minmax(0,1fr)_auto_auto_auto] items-center gap-3 border px-3 h-12 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40" : "border-border/50"} ${flashClass}`}
+      >
+        <img src={faviconFor(link.url)} alt="" className="h-4 w-4 rounded shrink-0" loading="lazy" />
+        <a
+          href={link.url} target="_blank" rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="font-medium text-sm truncate hover:underline"
+        >{link.title || link.url}</a>
+        <span className="font-mono text-[11px] text-muted-foreground truncate">{domain}</span>
+        <TypeIcon type={link.content_type} className="h-3.5 w-3.5 text-primary/70" />
+        <span className="font-mono text-[10px] text-muted-foreground/70 hidden md:block">{link.status}</span>
+        <span className="font-mono text-[10px] text-muted-foreground/60 hidden lg:block">{ago}</span>
+      </div>
+    );
+  }
+
+  // Thumbnails — big preview card
+  if (view === "thumbnails") {
     return (
       <button
         ref={ref as React.RefObject<HTMLButtonElement>}
@@ -1307,7 +1502,65 @@ const LinkCard = memo(function LinkCard({
         onClick={selectMode ? onCheck : onSelect}
         aria-pressed={selected}
         data-selected={selected ? "true" : undefined}
-        className={`group relative overflow-hidden text-left border p-4 h-[196px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-0.5" : "border-border/50"} ${flashClass}`}
+        className={`group relative overflow-hidden text-left border h-[296px] flex flex-col transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-0.5" : "border-border/50"} ${flashClass}`}
+      >
+        <div className="relative h-[150px] w-full overflow-hidden bg-gradient-to-br from-muted/40 to-muted/10 flex items-center justify-center">
+          <img src={faviconFor(link.url)} alt="" className="h-14 w-14 rounded-2xl opacity-90 shadow-lg" loading="lazy" />
+          <TypeIcon type={link.content_type} className="absolute top-2 right-2 h-4 w-4 text-primary/70" />
+        </div>
+        <div className="flex-1 p-4 flex flex-col gap-1.5 min-h-0">
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono text-[10px] text-muted-foreground truncate">{domain}</span>
+            {link.pinned && <Pin className="h-3 w-3 text-primary fill-primary" />}
+          </div>
+          <a
+            href={link.url} target="_blank" rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="font-semibold text-sm leading-tight hover:underline line-clamp-2"
+          >{link.title || link.url}</a>
+          {link.summary && <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{link.summary}</p>}
+          <span className="font-mono text-[10px] text-muted-foreground/60 mt-auto">{ago}</span>
+        </div>
+      </button>
+    );
+  }
+
+  // Cover flow — wide horizontal card (used inside a carousel)
+  if (view === "cover") {
+    return (
+      <button
+        ref={ref as React.RefObject<HTMLButtonElement>}
+        data-link-card
+        data-morph={morph.style}
+        style={morphStyle}
+        onClick={selectMode ? onCheck : onSelect}
+        aria-pressed={selected}
+        data-selected={selected ? "true" : undefined}
+        className={`group relative overflow-hidden text-left border w-[260px] h-[220px] shrink-0 flex flex-col transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-1 scale-[1.02]" : "border-border/50"} ${flashClass}`}
+      >
+        <div className="relative h-[110px] w-full overflow-hidden bg-gradient-to-br from-muted/40 to-muted/10 flex items-center justify-center">
+          <img src={faviconFor(link.url)} alt="" className="h-12 w-12 rounded-xl opacity-90" loading="lazy" />
+        </div>
+        <div className="flex-1 p-3 flex flex-col gap-1 min-h-0">
+          <span className="font-mono text-[10px] text-muted-foreground truncate">{domain}</span>
+          <span className="font-semibold text-sm leading-tight line-clamp-2">{link.title || link.url}</span>
+        </div>
+      </button>
+    );
+  }
+
+  // Grid / masonry — card layout
+  if (view === "grid" || view === "masonry") {
+    return (
+      <button
+        ref={ref as React.RefObject<HTMLButtonElement>}
+        data-link-card
+        data-morph={morph.style}
+        style={morphStyle}
+        onClick={selectMode ? onCheck : onSelect}
+        aria-pressed={selected}
+        data-selected={selected ? "true" : undefined}
+        className={`group relative overflow-hidden text-left border p-4 ${view === "masonry" ? "block w-full break-inside-avoid mb-4" : "h-[196px]"} transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${selected ? "ring-2 ring-primary/40 -translate-y-0.5" : "border-border/50"} ${flashClass}`}
       >
         <div className="flex items-start gap-2.5">
           {selectMode && <Checkbox checked={isChecked} className="mt-0.5" />}
@@ -1336,8 +1589,8 @@ const LinkCard = memo(function LinkCard({
           </div>
           <TypeIcon type={link.content_type} className="h-4 w-4 text-primary/70 shrink-0 mt-0.5" />
         </div>
-        {link.summary && <p className="text-xs text-muted-foreground line-clamp-2 mt-2 leading-relaxed">{link.summary}</p>}
-        <div className="flex items-center gap-1.5 mt-auto pt-3 flex-wrap">
+        {link.summary && <p className={`text-xs text-muted-foreground mt-2 leading-relaxed ${view === "masonry" ? "" : "line-clamp-2"}`}>{link.summary}</p>}
+        <div className="flex items-center gap-1.5 mt-3 pt-1 flex-wrap">
           {link.status === "pending" ? (
             <button
               onClick={(e) => { e.stopPropagation(); onRetry(); }}
@@ -1585,7 +1838,7 @@ function EmptyState() {
   );
 }
 
-function SkeletonList({ view = "list" }: { view?: "list" | "grid" }) {
+function SkeletonList({ view = "list" }: { view?: LayoutMode }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [count, setCount] = useState(0);
   const [cols, setCols] = useState(1);
@@ -1594,8 +1847,8 @@ function SkeletonList({ view = "list" }: { view?: "list" | "grid" }) {
     const update = () => {
       const h = wrapRef.current?.clientHeight || window.innerHeight || 800;
       const w = window.innerWidth;
-      const nextCols = view === "grid" ? (w >= 1280 ? 3 : w >= 768 ? 2 : 1) : 1;
-      const rowH = view === "grid" ? 188 : 56; // grid card + gap, list row + gap
+      const nextCols = isMultiColLayout(view) ? (w >= 1280 ? 3 : w >= 768 ? 2 : 1) : 1;
+      const rowH = isMultiColLayout(view) ? 188 : 56; // grid card + gap, list row + gap
       const rows = Math.ceil(h / rowH) + 1; // tiny overscan
       setCols(nextCols);
       setCount(rows * nextCols);
@@ -1605,10 +1858,10 @@ function SkeletonList({ view = "list" }: { view?: "list" | "grid" }) {
     return () => window.removeEventListener("resize", update);
   }, [view]);
 
-  const itemClass = view === "grid" ? "h-[176px] rounded-2xl shimmer" : "h-12 rounded-2xl shimmer";
-  const containerClass = view === "grid" ? "grid gap-3" : "space-y-2";
+  const itemClass = isMultiColLayout(view) ? "h-[176px] rounded-2xl shimmer" : "h-12 rounded-2xl shimmer";
+  const containerClass = isMultiColLayout(view) ? "grid gap-3" : "space-y-2";
   const containerStyle =
-    view === "grid" ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined;
+    isMultiColLayout(view) ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : undefined;
 
   return (
     <div ref={wrapRef} className="h-full">
