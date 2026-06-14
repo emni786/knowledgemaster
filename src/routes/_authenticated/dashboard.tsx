@@ -632,7 +632,8 @@ function QuickLink({ to, icon: Icon, label, hint }: { to: string; icon: typeof A
   return (
     <Link
       to={to}
-      className="group rounded-2xl border border-border/60 bg-card/40 p-4 hover:border-primary/40 hover:bg-card/60 transition-colors flex flex-col gap-2"
+      data-card
+      className="group rounded-2xl border border-border/60 p-4 hover:border-primary/40 transition-colors flex flex-col gap-2"
     >
       <div className="flex items-center justify-between">
         <Icon className="h-4 w-4 text-primary/70" />
