@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchLinks } from "@/lib/api/links";
+import { fetchCollections } from "@/lib/api/collections";
 import { AppShell } from "@/components/AppShell";
 import { TopicGraph3D } from "@/components/TopicGraph3D";
 import { PageTabs } from "@/components/PageTabs";
@@ -14,6 +15,8 @@ import {
 import {
   Activity, Link2, Pin, AlertTriangle, TrendingUp, Sparkles, Loader2,
   Rss, Plus, RefreshCw, Trash2, AlertCircle, Boxes, Hash, Network,
+  Library as LibraryIcon, Compass, BarChart3, Newspaper, Settings as SettingsIcon,
+  CheckCircle2, Clock, FolderOpen, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,9 +54,14 @@ function DashboardPage() {
       total: active.length,
       pinned: active.filter((l) => l.pinned).length,
       failed: active.filter((l) => l.status === "failed").length,
+      pending: active.filter((l) => l.status === "pending").length,
+      ready: active.filter((l) => l.status === "ready").length,
       recent: recent.length,
+      trashed: links.filter((l) => l.deleted_at).length,
     };
   }, [links]);
+
+  const collectionsQuery = useQuery({ queryKey: ["collections-list"], queryFn: fetchCollections, staleTime: 60_000 });
 
   const series = useMemo(() => {
     const days: { date: string; label: string; count: number }[] = [];
@@ -111,6 +119,56 @@ function DashboardPage() {
             <Stat icon={AlertTriangle} label="Failed" value={stats.failed} loading={isLoading} tone={stats.failed ? "destructive" : "muted"} />
           </div>
 
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Stat icon={CheckCircle2} label="Ready" value={stats.ready} loading={isLoading} tone="primary" />
+            <Stat icon={Clock} label="Pending" value={stats.pending} loading={isLoading} tone={stats.pending ? "primary" : "muted"} />
+            <Stat icon={Trash2} label="Trash" value={stats.trashed} loading={isLoading} tone="muted" />
+            <Stat icon={FolderOpen} label="Collections" value={collectionsQuery.data?.length ?? 0} loading={collectionsQuery.isLoading} />
+          </div>
+
+          <section className="space-y-3">
+            <Header icon={Network} title="Jump to" subtitle="Every page of your workspace, one click away." />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              <QuickLink to="/library" icon={LibraryIcon} label="Library" hint={`${stats.total} links`} />
+              <QuickLink to="/discover" icon={Compass} label="Discover" hint="Find related" />
+              <QuickLink to="/analytics" icon={BarChart3} label="Analytics" hint="Trends & insights" />
+              <QuickLink to="/digest" icon={Newspaper} label="Digest" hint="Curated reads" />
+              <QuickLink to="/settings" icon={SettingsIcon} label="Settings" hint="Preferences" />
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <Header icon={FolderOpen} title="Collections" subtitle="Your curated buckets of knowledge.">
+              <Button asChild size="sm" variant="outline">
+                <Link to="/library">Manage <ArrowRight className="h-3.5 w-3.5 ml-1" /></Link>
+              </Button>
+            </Header>
+            {collectionsQuery.isLoading ? (
+              <div className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-border/60 bg-card/40">Loading collections…</div>
+            ) : (collectionsQuery.data ?? []).length === 0 ? (
+              <div className="text-sm text-muted-foreground py-6 text-center rounded-2xl border border-dashed border-border/60 bg-card/40">
+                No collections yet. Create one from the Library to organize related links.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {(collectionsQuery.data ?? []).slice(0, 12).map((c) => (
+                  <Link
+                    key={c.id}
+                    to="/library"
+                    className="group rounded-2xl border border-border/60 bg-card/40 p-4 hover:border-primary/40 hover:bg-card/60 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <FolderOpen className="h-4 w-4 text-primary/70" />
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="mt-2 text-sm font-medium truncate">{c.name}</div>
+                    <div className="text-[11px] font-mono text-muted-foreground truncate">/{c.slug}</div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
           <KnowledgePulse links={links} />
 
           <section className="space-y-3">
@@ -167,6 +225,7 @@ function DashboardPage() {
           </section>
 
           <section className="space-y-3">
+
             <Header icon={Sparkles} title="Cosmos breakdown" subtitle="Top topics, edges, and group composition for your current graph." />
             <CosmosStatsPanel stats={cosmosStats} clusters={clusters} />
           </section>
@@ -583,5 +642,23 @@ function MiniStat({ icon: Icon, label, value }: { icon: typeof Activity; label: 
       </div>
       <div className="mt-1 font-display text-2xl font-semibold tabular-nums">{value}</div>
     </div>
+  );
+}
+
+function QuickLink({ to, icon: Icon, label, hint }: { to: string; icon: typeof Activity; label: string; hint?: string }) {
+  return (
+    <Link
+      to={to}
+      className="group rounded-2xl border border-border/60 bg-card/40 p-4 hover:border-primary/40 hover:bg-card/60 transition-colors flex flex-col gap-2"
+    >
+      <div className="flex items-center justify-between">
+        <Icon className="h-4 w-4 text-primary/70" />
+        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      <div>
+        <div className="text-sm font-medium">{label}</div>
+        {hint && <div className="text-[11px] font-mono text-muted-foreground truncate">{hint}</div>}
+      </div>
+    </Link>
   );
 }
