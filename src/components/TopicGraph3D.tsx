@@ -16,16 +16,16 @@ const ForceGraph3D = lazy(() =>
   import("react-force-graph-3d").then((m) => ({ default: m.default as any }))
 ) as any;
 
-// Element palette — 8 atomic "element" groups
+// Planet palette — Saturn-style cosmos groups
 const PLANETS = [
-  { name: "Hydrogen",  color: "#fbbf24", ring: "#f59e0b" },
-  { name: "Helium",    color: "#ef4444", ring: "#b91c1c" },
-  { name: "Lithium",   color: "#a78bfa", ring: "#7c3aed" },
-  { name: "Carbon",    color: "#22d3ee", ring: "#0891b2" },
-  { name: "Nitrogen",  color: "#3b82f6", ring: "#1d4ed8" },
-  { name: "Oxygen",    color: "#34d399", ring: "#059669" },
-  { name: "Neon",      color: "#fb923c", ring: "#ea580c" },
-  { name: "Argon",     color: "#f472b6", ring: "#db2777" },
+  { name: "Saturn Gold",   color: "#fbbf24", ring: "#f59e0b" },
+  { name: "Mars Red",      color: "#ef4444", ring: "#fb7185" },
+  { name: "Pluto Purple",  color: "#a78bfa", ring: "#c4b5fd" },
+  { name: "Uranus Cyan",   color: "#22d3ee", ring: "#67e8f9" },
+  { name: "Neptune Blue",  color: "#3b82f6", ring: "#93c5fd" },
+  { name: "Earth Green",   color: "#34d399", ring: "#6ee7b7" },
+  { name: "Jupiter Orange",color: "#fb923c", ring: "#fdba74" },
+  { name: "Venus Pink",    color: "#f472b6", ring: "#f9a8d4" },
 ];
 
 type GNode = {
@@ -40,98 +40,60 @@ type GNode = {
 };
 type GLink = { source: string; target: string; value: number };
 
-// Build an atom: nucleus (proton/neutron cluster) + orbital shells with animated electrons
+// Build a planet: glowing sphere with Saturn-style tilted rings (one ring per ~5 links)
 function buildPlanetObject(node: GNode, highlighted: boolean) {
   const group = new THREE.Group();
-  const nucleusR = Math.max(2.2, Math.sqrt(node.count) * 1.8);
+  const planetR = Math.max(2.2, Math.sqrt(node.count) * 1.8);
 
-  // Glow halo
+  // Outer atmospheric glow halo
   const haloMat = new THREE.SpriteMaterial({
     color: new THREE.Color(node.color),
-    opacity: highlighted ? 0.6 : 0.3,
+    opacity: highlighted ? 0.55 : 0.28,
     transparent: true,
     depthWrite: false,
   });
   const halo = new THREE.Sprite(haloMat);
-  halo.scale.set(nucleusR * 5, nucleusR * 5, 1);
+  halo.scale.set(planetR * 4.6, planetR * 4.6, 1);
   group.add(halo);
 
-  // Nucleus = cluster of small spheres (protons + neutrons)
-  const particleCount = Math.min(14, 4 + Math.floor(node.count / 2));
-  for (let i = 0; i < particleCount; i++) {
-    const isProton = i % 2 === 0;
-    const r = nucleusR * 0.38;
-    const geo = new THREE.SphereGeometry(r, 12, 12);
-    const mat = new THREE.MeshBasicMaterial({
-      color: isProton ? node.color : "#e2e8f0",
-    });
-    const m = new THREE.Mesh(geo, mat);
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(2 * Math.random() - 1);
-    const rr = nucleusR * 0.55 * Math.cbrt(Math.random());
-    m.position.set(
-      rr * Math.sin(phi) * Math.cos(theta),
-      rr * Math.sin(phi) * Math.sin(theta),
-      rr * Math.cos(phi),
-    );
-    group.add(m);
-  }
+  // Planet body — solid colored sphere
+  const planetGeo = new THREE.SphereGeometry(planetR, 32, 32);
+  const planetMat = new THREE.MeshBasicMaterial({ color: node.color });
+  const planet = new THREE.Mesh(planetGeo, planetMat);
+  group.add(planet);
 
-  // Electron shells — orbital count scales with link count
-  const shellCount = Math.min(3, 1 + Math.floor(node.count / 5));
-  for (let s = 0; s < shellCount; s++) {
-    const orbitR = nucleusR * (2.4 + s * 1.2);
+  // Inner highlight for depth
+  const innerGlowMat = new THREE.SpriteMaterial({
+    color: new THREE.Color("#ffffff"),
+    opacity: 0.18,
+    transparent: true,
+    depthWrite: false,
+  });
+  const innerGlow = new THREE.Sprite(innerGlowMat);
+  innerGlow.scale.set(planetR * 1.6, planetR * 1.6, 1);
+  innerGlow.position.set(-planetR * 0.25, planetR * 0.25, planetR * 0.5);
+  group.add(innerGlow);
 
-    // Orbit path ring
-    const ringGeo = new THREE.RingGeometry(orbitR - 0.06, orbitR + 0.06, 96);
+  // Saturn-style tilted rings — ring count scales with link count
+  const ringCount = Math.min(3, 1 + Math.floor(node.count / 5));
+  // Shared tilt for all rings on this planet so they look like a single ring system
+  const tiltX = Math.PI / 2 + (Math.random() * 0.6 - 0.3);
+  const tiltY = Math.random() * 0.8 - 0.4;
+  for (let s = 0; s < ringCount; s++) {
+    const innerR = planetR * (1.8 + s * 0.55);
+    const outerR = innerR + planetR * 0.35;
+    const ringGeo = new THREE.RingGeometry(innerR, outerR, 96);
     const ringMat = new THREE.MeshBasicMaterial({
       color: node.ring,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: highlighted ? 0.75 : 0.4,
+      opacity: highlighted ? 0.85 : 0.55,
       depthWrite: false,
     });
-    const orbit = new THREE.Mesh(ringGeo, ringMat);
-    orbit.rotation.x = Math.PI / 2 + s * 0.6;
-    orbit.rotation.y = s * 0.9;
-    group.add(orbit);
-
-    // Electrons on this shell — animated via onBeforeRender
-    const pivot = new THREE.Group();
-    pivot.rotation.copy(orbit.rotation);
-    const electronsOnShell = Math.min(6, 1 + Math.floor(node.count / (s + 2)));
-    const speed = 0.6 + s * 0.25 + Math.random() * 0.2;
-    const phase0 = Math.random() * Math.PI * 2;
-    for (let e = 0; e < electronsOnShell; e++) {
-      const eGeo = new THREE.SphereGeometry(Math.max(0.6, nucleusR * 0.22), 10, 10);
-      const eMat = new THREE.MeshBasicMaterial({ color: "#e0f2fe" });
-      const electron = new THREE.Mesh(eGeo, eMat);
-      (electron as any).userData._orbit = {
-        r: orbitR,
-        offset: (e / electronsOnShell) * Math.PI * 2 + phase0,
-        speed,
-      };
-      // electron glow
-      const trailMat = new THREE.SpriteMaterial({
-        color: new THREE.Color("#7dd3fc"),
-        opacity: 0.7, transparent: true, depthWrite: false,
-      });
-      const trail = new THREE.Sprite(trailMat);
-      const ts = Math.max(1.4, nucleusR * 0.6);
-      trail.scale.set(ts, ts, 1);
-      electron.add(trail);
-      pivot.add(electron);
-    }
-    pivot.onBeforeRender = () => {
-      const t = performance.now() * 0.001;
-      pivot.children.forEach((c) => {
-        const d = (c as any).userData?._orbit;
-        if (!d) return;
-        const a = t * d.speed + d.offset;
-        c.position.set(Math.cos(a) * d.r, Math.sin(a) * d.r, 0);
-      });
-    };
-    group.add(pivot);
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = tiltX;
+    ring.rotation.y = tiltY;
+    group.add(ring);
   }
 
   // Label
@@ -140,10 +102,10 @@ function buildPlanetObject(node: GNode, highlighted: boolean) {
   sprite.backgroundColor = "rgba(0,0,0,0)";
   (sprite as any).padding = 0;
   (sprite as any).borderWidth = 0;
-  sprite.textHeight = Math.max(2, nucleusR * 0.7);
+  sprite.textHeight = Math.max(2, planetR * 0.7);
   sprite.fontFace = "Inter, ui-sans-serif, system-ui";
   sprite.fontWeight = "600";
-  sprite.position.set(0, -nucleusR * 3.4, 0);
+  sprite.position.set(0, -planetR * 2.6, 0);
   group.add(sprite);
 
   return group;
@@ -446,29 +408,25 @@ export function TopicGraph3D({
           </div>
         )}
 
-        {/* Atomic legend */}
+        {/* Cosmos legend */}
         <aside className="pointer-events-none absolute top-3 right-3 w-[240px] rounded-xl border border-white/10 bg-black/60 backdrop-blur p-3 text-[11px] text-slate-200">
           <div className="flex items-center gap-1.5 font-mono uppercase tracking-widest text-[10px] text-amber-300">
-            <Sparkles className="h-3 w-3" /> Atomic legend
+            <Sparkles className="h-3 w-3" /> Cosmos legend
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Nucleus = Topic</div>
-            <div className="text-slate-400">Bigger nucleus = more links on that topic</div>
+            <div className="font-semibold text-slate-100">Planet size = Link count</div>
+            <div className="text-slate-400">Bigger planet = more links on that topic</div>
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Electrons = Links</div>
-            <div className="text-slate-400">Orbiting around their parent topic</div>
+            <div className="font-semibold text-slate-100">Rings = Activity</div>
+            <div className="text-slate-400">More rings = more saved links</div>
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Shells = Activity</div>
-            <div className="text-slate-400">More shells = more saved links</div>
-          </div>
-          <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Bonds = Relations</div>
+            <div className="font-semibold text-slate-100">Edges = Co-occurrence</div>
             <div className="text-slate-400">Topics appearing together on links</div>
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Color = Element</div>
+            <div className="font-semibold text-slate-100">Color = Tag group</div>
             <div className="mt-1 grid grid-cols-2 gap-y-1 gap-x-2">
               {PLANETS.map((p) => (
                 <div key={p.name} className="flex items-center gap-1.5">
