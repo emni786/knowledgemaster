@@ -196,7 +196,7 @@ function NuggetPopup({ pool }: { pool: LinkRow[] }) {
       key={l.id}
       className="fixed bottom-6 right-6 z-40 w-[320px] max-w-[calc(100vw-2rem)] animate-fade-in"
     >
-      <div className="relative rounded-2xl border border-primary/40 bg-card/95 backdrop-blur-xl shadow-2xl shadow-primary/20 p-4">
+      <div data-card data-morph="holo" className="relative rounded-2xl border border-primary/40 shadow-2xl shadow-primary/20 p-4">
         <div className="absolute -top-2 left-4 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-mono uppercase tracking-widest flex items-center gap-1">
           <Shuffle className="h-2.5 w-2.5" /> Knowledge nugget
         </div>
