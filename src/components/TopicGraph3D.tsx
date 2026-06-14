@@ -446,20 +446,22 @@ export function TopicGraph3D({
 
       // Cinematic bloom via react-force-graph's exposed composer
       if (!scene.userData._bloom && fg.postProcessingComposer) {
-        try {
-          const { UnrealBloomPass } = await import("three/examples/jsm/postprocessing/UnrealBloomPass.js");
-          const composer = fg.postProcessingComposer();
-          if (composer) {
-            const bloom = new UnrealBloomPass(
-              new THREE.Vector2(size.w, size.h),
-              0.85,  // strength
-              0.55,  // radius
-              0.08,  // threshold
+        scene.userData._bloom = true;
+        (async () => {
+          try {
+            const { UnrealBloomPass } = await import(
+              "three/examples/jsm/postprocessing/UnrealBloomPass.js"
             );
-            composer.addPass(bloom);
-            scene.userData._bloom = true;
-          }
-        } catch {}
+            const composer = fg.postProcessingComposer?.();
+            if (composer) {
+              const bloom = new UnrealBloomPass(
+                new THREE.Vector2(size.w, size.h),
+                0.85, 0.55, 0.08,
+              );
+              composer.addPass(bloom);
+            }
+          } catch {}
+        })();
       }
     } catch {}
   }, [mounted, positionedNodes.length, size.w, size.h]);
