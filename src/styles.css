@@ -319,6 +319,14 @@
 .lib-morph [class*="rounded-full"] {
   border-radius: 999px;
 }
+.lib-morph [data-tag] {
+  background: color-mix(in oklab, hsl(var(--accent)) 35%, transparent) !important;
+  color: hsl(var(--accent-foreground)) !important;
+  border: 1px solid color-mix(in oklab, hsl(var(--accent)) 25%, transparent);
+  padding: 1px 8px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
 
 /* Dialogs / sheets — soft glass */
 .lib-morph [role="dialog"],
