@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Bot, Loader2, Trash2, ExternalLink, Copy, Check, Activity, Chrome, Download, Plus, KeyRound, Lock } from "lucide-react";
+import { ArrowLeft, Bot, Loader2, Trash2, ExternalLink, Copy, Check, Activity, Chrome, Download, Plus, KeyRound, Lock, Upload, FileJson } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   deleteTelegramBot,
   listTelegramBots,
   testTelegramWebhook,
+  importTelegramLinks,
 } from "@/lib/telegram.functions";
 import { createApiToken, listApiTokens, revokeApiToken } from "@/lib/api-tokens.functions";
 
@@ -170,12 +171,18 @@ function TelegramBots() {
         <div className="flex-1">
           <h3 className="font-display text-lg font-semibold">Telegram bot</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Paste any link to your own Telegram bot and Knowledgemaster will analyze it (title, summary) and save it
-            to your library. Create a bot with{" "}
+            Create a bot with{" "}
             <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
               @BotFather <ExternalLink className="h-3 w-3" />
             </a>{" "}
-            and paste the token below.
+            and paste the token below. DM the bot a link and it gets saved.
+            For channels and groups, <strong>add the bot as an admin</strong> (groups need "read all
+            messages" or admin rights, channels need posting/admin). Every new message is then scanned
+            and links are auto-saved to your library.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Telegram does not let bots read history from before they joined — use the JSON backfill
+            below to import older messages from a chat.
           </p>
         </div>
       </div>
@@ -294,7 +301,142 @@ function TelegramBots() {
           </ul>
         )}
       </div>
+
+      <TelegramBackfill />
     </section>
+  );
+}
+
+function TelegramBackfill() {
+  const importFn = useServerFn(importTelegramLinks);
+  const qc = useQueryClient();
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ urls: string[]; chatTitle?: string } | null>(null);
+
+  const mut = useMutation({
+    mutationFn: (p: { urls: string[]; chat_title?: string }) =>
+      importFn({ data: { urls: p.urls, chat_title: p.chat_title } }),
+    onSuccess: (res) => {
+      toast.success(`Imported ${res.imported} new links${res.skipped ? ` (skipped ${res.skipped} duplicates)` : ""}`);
+      qc.invalidateQueries({ queryKey: ["links"] });
+      setPreview(null);
+      setFileName(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  async function handleFile(file: File) {
+    setFileName(file.name);
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("File too large (max 200MB). Trim the export first.");
+      return;
+    }
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text) as {
+        name?: string;
+        messages?: Array<{
+          text_entities?: Array<{ type: string; text: string; href?: string }>;
+          text?: string | Array<string | { type: string; text: string; href?: string }>;
+        }>;
+      };
+      const URL_RE = /https?:\/\/[^\s<>"')]+/gi;
+      const urls = new Set<string>();
+      for (const m of json.messages ?? []) {
+        for (const ent of m.text_entities ?? []) {
+          if (ent.type === "link") {
+            (ent.text.match(URL_RE) ?? []).forEach((u) => urls.add(u.replace(/[)\].,;!?]+$/, "")));
+          } else if (ent.type === "text_link" && ent.href) {
+            urls.add(ent.href);
+          }
+        }
+        if (typeof m.text === "string") {
+          (m.text.match(URL_RE) ?? []).forEach((u) => urls.add(u.replace(/[)\].,;!?]+$/, "")));
+        } else if (Array.isArray(m.text)) {
+          for (const part of m.text) {
+            if (typeof part === "string") {
+              (part.match(URL_RE) ?? []).forEach((u) => urls.add(u.replace(/[)\].,;!?]+$/, "")));
+            } else if (part?.type === "text_link" && part.href) {
+              urls.add(part.href);
+            } else if (part?.type === "link" && part.text) {
+              (part.text.match(URL_RE) ?? []).forEach((u) => urls.add(u.replace(/[)\].,;!?]+$/, "")));
+            }
+          }
+        }
+      }
+      const list = Array.from(urls);
+      if (list.length === 0) {
+        toast.error("No links found in this export.");
+        return;
+      }
+      setPreview({ urls: list, chatTitle: json.name });
+    } catch (e) {
+      toast.error("Could not parse JSON. Use Telegram Desktop → Export chat history → JSON.");
+    }
+  }
+
+  return (
+    <div className="mt-8 rounded-lg border border-dashed border-border/60 p-4">
+      <div className="flex items-start gap-3">
+        <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+          <FileJson className="h-4 w-4" />
+        </div>
+        <div className="flex-1">
+          <h4 className="text-sm font-semibold">Backfill from chat export</h4>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Open Telegram <strong>Desktop</strong> → the channel/group → ⋮ menu → <em>Export chat history</em> →
+            format <strong>JSON</strong>. Upload the resulting <code>result.json</code> below and every link in
+            that history will be added to your library.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <label className="inline-flex">
+          <input
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void handleFile(f);
+              e.target.value = "";
+            }}
+          />
+          <span className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-background/60 px-3 py-1.5 text-xs font-medium hover:bg-background">
+            <Upload className="h-3.5 w-3.5" />
+            Choose result.json
+          </span>
+        </label>
+        {fileName && (
+          <span className="font-mono text-[11px] text-muted-foreground truncate max-w-[40%]">{fileName}</span>
+        )}
+      </div>
+
+      {preview && (
+        <div className="mt-4 rounded-md border border-border/60 bg-background/60 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-sm">
+              Found <strong>{preview.urls.length}</strong> link{preview.urls.length === 1 ? "" : "s"}
+              {preview.chatTitle && <> in <strong>{preview.chatTitle}</strong></>}
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={() => { setPreview(null); setFileName(null); }} disabled={mut.isPending}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={mut.isPending}
+                onClick={() => mut.mutate({ urls: preview.urls, chat_title: preview.chatTitle })}
+              >
+                {mut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                Import {preview.urls.length}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
