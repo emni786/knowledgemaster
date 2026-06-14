@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Bot, Loader2, Trash2, ExternalLink, Copy, Check, Activity, Chrome, Download, Plus, KeyRound, Lock } from "lucide-react";
+import { ArrowLeft, Bot, Loader2, Trash2, ExternalLink, Copy, Check, Activity, Chrome, Download, Plus, KeyRound, Lock, Upload, FileJson } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   deleteTelegramBot,
   listTelegramBots,
   testTelegramWebhook,
+  importTelegramLinks,
 } from "@/lib/telegram.functions";
 import { createApiToken, listApiTokens, revokeApiToken } from "@/lib/api-tokens.functions";
 
