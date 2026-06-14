@@ -256,6 +256,14 @@ function LibraryPage() {
     mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) => togglePin(id, pinned),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["links"] }),
   });
+  const retryMut = useMutation({
+    mutationFn: retryAnalysis,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["links"] });
+      toast.success("Analysis restarted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const handleAdd = useCallback((raw: string) => {
     const urls = Array.from(new Set(
