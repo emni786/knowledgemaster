@@ -184,7 +184,7 @@ const tooltipStyle = {
 
 function Card({ icon: Icon, title, subtitle, children }: { icon: typeof BarChart3; title: string; subtitle: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-border/60 bg-card/40 p-5">
+    <section data-card className="rounded-2xl border border-border/60 p-5">
       <div className="mb-4">
         <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           <Icon className="h-3.5 w-3.5" /> {title}
