@@ -621,7 +621,7 @@ export function TopicGraph3D({
                     return (
                       <button
                         key={id}
-                        onClick={() => setOpenTag(id)}
+                        onClick={() => { setOpenTag(id); flyTo(id); }}
                         className="w-full flex items-center gap-2 text-left px-2 py-1 rounded hover:bg-muted text-sm"
                       >
                         <span className="h-2 w-2 rounded-full" style={{ background: n.color }} />
