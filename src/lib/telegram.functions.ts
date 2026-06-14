@@ -186,3 +186,89 @@ export const deleteTelegramBot = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+function normalizeUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    u.hash = "";
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+function domainOf(url: string): string | null {
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return null; }
+}
+
+function detectType(url: string): "article" | "video" | "repo" | "docs" | "other" {
+  const d = domainOf(url) ?? "";
+  if (/youtube\.com|youtu\.be|vimeo\.com/.test(d)) return "video";
+  if (/github\.com|gitlab\.com/.test(d)) return "repo";
+  if (/docs\.google|notion\.so|hackmd|readthedocs/.test(d)) return "docs";
+  return "article";
+}
+
+export const importTelegramLinks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      chat_title: z.string().max(200).optional(),
+      urls: z.array(z.string().url()).min(1).max(5000),
+    }).parse(input)
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const unique = Array.from(new Set(data.urls.map((u) => u.trim()).filter(Boolean)));
+    const normalized = unique.map((u) => ({ url: u, norm: normalizeUrl(u) }));
+    const norms = Array.from(new Set(normalized.map((n) => n.norm)));
+
+    // Skip URLs the user already has
+    const { data: existing } = await supabase
+      .from("links")
+      .select("normalized_url")
+      .eq("owner_id", userId)
+      .in("normalized_url", norms);
+    const seen = new Set((existing ?? []).map((r) => r.normalized_url).filter(Boolean) as string[]);
+
+    const fresh: { url: string; norm: string }[] = [];
+    const usedNorm = new Set<string>();
+    for (const n of normalized) {
+      if (seen.has(n.norm) || usedNorm.has(n.norm)) continue;
+      usedNorm.add(n.norm);
+      fresh.push(n);
+    }
+
+    if (fresh.length === 0) return { imported: 0, skipped: data.urls.length };
+
+    const chatTag = data.chat_title ? data.chat_title.replace(/[^a-z0-9-_ ]/gi, "").trim().slice(0, 60) : null;
+    const rows = fresh.map((n) => {
+      const dom = domainOf(n.norm);
+      return {
+        owner_id: userId,
+        url: n.url,
+        normalized_url: n.norm,
+        domain: dom,
+        content_type: detectType(n.norm),
+        status: "pending" as const,
+        source: "telegram" as const,
+        title: dom ?? n.url,
+        summary: chatTag ? `Imported from Telegram · ${chatTag}` : "Imported from Telegram export.",
+        tags: chatTag ? ["telegram", chatTag] : ["telegram"],
+      };
+    });
+
+    // Chunked insert to keep payloads sane
+    let inserted = 0;
+    for (let i = 0; i < rows.length; i += 200) {
+      const slice = rows.slice(i, i + 200);
+      const { error, count } = await supabase
+        .from("links")
+        .insert(slice, { count: "exact" });
+      if (error) throw new Error(error.message);
+      inserted += count ?? slice.length;
+    }
+
+    return { imported: inserted, skipped: data.urls.length - inserted };
+  });
