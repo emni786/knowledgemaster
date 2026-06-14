@@ -247,6 +247,70 @@ export function TopicGraph3D({
     });
   }, [nodes, adjacency, showClusters]);
 
+  // Layout positions per mode. Cosmos = free force layout (no pinning).
+  // Other modes pin nodes via fx/fy/fz, which the force engine respects.
+  const positionedNodes = useMemo(() => {
+    if (mode === "cosmos") {
+      return displayNodes.map((n) => ({ ...n, fx: undefined, fy: undefined, fz: undefined }));
+    }
+    const N = displayNodes.length;
+    const sorted = [...displayNodes].sort((a, b) => b.count - a.count);
+    const indexById = new Map(sorted.map((n, i) => [n.id, i]));
+    const R = Math.max(180, Math.sqrt(N) * 60);
+
+    return displayNodes.map((n) => {
+      const i = indexById.get(n.id) ?? 0;
+      let fx = 0, fy = 0, fz = 0;
+
+      if (mode === "sphere") {
+        // Fibonacci sphere — even distribution
+        const phi = Math.acos(1 - (2 * (i + 0.5)) / N);
+        const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+        fx = R * Math.sin(phi) * Math.cos(theta);
+        fy = R * Math.sin(phi) * Math.sin(theta);
+        fz = R * Math.cos(phi);
+      } else if (mode === "galaxy") {
+        // Spiral disk with 4 arms, slight z thickness
+        const arms = 4;
+        const arm = i % arms;
+        const t = i / Math.max(1, N - 1);
+        const radius = 40 + t * R * 1.4;
+        const angle = arm * (Math.PI * 2 / arms) + t * Math.PI * 6;
+        fx = radius * Math.cos(angle);
+        fz = radius * Math.sin(angle);
+        fy = (Math.sin(i * 1.7) * 30) * (0.4 + 0.6 * (1 - t));
+      } else if (mode === "atomic") {
+        // Cluster per group around its own hub on a ring
+        const groups = Array.from(new Set(displayNodes.map((d) => d.group))).sort((a, b) => a - b);
+        const gIdx = groups.indexOf(n.group);
+        const G = groups.length || 1;
+        const hubR = R * 0.9;
+        const hubAngle = (gIdx / G) * Math.PI * 2;
+        const hubX = hubR * Math.cos(hubAngle);
+        const hubZ = hubR * Math.sin(hubAngle);
+        // Index within group → orbit
+        const within = displayNodes.filter((d) => d.group === n.group);
+        const local = within.findIndex((d) => d.id === n.id);
+        const M = within.length;
+        const orbitR = 30 + Math.sqrt(M) * 18;
+        const a = (local / Math.max(1, M)) * Math.PI * 2;
+        fx = hubX + orbitR * Math.cos(a);
+        fz = hubZ + orbitR * Math.sin(a);
+        fy = (local % 2 === 0 ? 1 : -1) * (10 + Math.sqrt(n.count) * 4);
+      } else if (mode === "flat") {
+        // 2D plane (z=0), spiral by importance
+        const t = i / Math.max(1, N - 1);
+        const angle = i * 0.6;
+        const radius = 40 + t * R * 1.5;
+        fx = radius * Math.cos(angle);
+        fy = radius * Math.sin(angle);
+        fz = 0;
+      }
+      return { ...n, fx, fy, fz };
+    });
+  }, [displayNodes, mode]);
+
+
   // Path finder: BFS shortest path
   const pathSet = useMemo(() => {
     if (!pathA || !pathB || pathA === pathB) return new Set<string>();
