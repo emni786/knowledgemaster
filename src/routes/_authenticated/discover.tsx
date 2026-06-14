@@ -80,7 +80,7 @@ function Page() {
       ) : items && items.length ? (
         <div className="grid gap-3 md:grid-cols-2">
           {items.map((it, i) => (
-            <article key={i} className="group rounded-2xl border border-border/60 bg-card/40 p-5 hover:border-primary/40 transition-colors">
+            <article key={i} data-card className="group rounded-2xl border border-border/60 p-5 hover:border-primary/40 transition-colors">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
