@@ -71,7 +71,7 @@ function Page() {
         </div>
       ) : digest ? (
         <>
-          <section className="rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/10 via-background to-background p-6">
+          <section data-card data-morph="aurora" className="rounded-2xl border border-primary/40 p-6">
             <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-primary">
               <Sparkles className="h-3.5 w-3.5" /> This {win}
             </div>
