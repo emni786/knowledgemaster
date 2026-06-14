@@ -1027,6 +1027,68 @@ function useGridColCount(view: LayoutMode) {
 type VRow =
   | { kind: "header"; key: string; title: string; count: number; section: "ready" | "pending" | "failed" }
   | { kind: "row"; key: string; items: LinkRow[]; offset: number };
+function NonVirtualLinkList({
+  links, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
+}: {
+  links: LinkRow[]; view: LayoutMode; showNumbers: boolean;
+  selectMode: boolean; selectedIds: Set<string>; toggleSelected: (id: string) => void;
+  selected: string | null; onSelect: (id: string) => void;
+  onPin: (id: string, p: boolean) => void; onRetry: (id: string) => void;
+}) {
+  const card = (l: LinkRow, i: number) => (
+    <LinkCard
+      key={l.id}
+      link={l}
+      index={i + 1}
+      view={view}
+      showNumbers={showNumbers}
+      selected={selected === l.id}
+      onSelect={() => onSelect(l.id)}
+      onPin={(p) => onPin(l.id, p)}
+      onRetry={() => onRetry(l.id)}
+      selectMode={selectMode}
+      isChecked={selectedIds.has(l.id)}
+      onCheck={() => toggleSelected(l.id)}
+    />
+  );
+
+  if (view === "masonry") {
+    return (
+      <div className="columns-1 md:columns-2 xl:columns-3 gap-4 [column-fill:_balance]">
+        {links.map((l, i) => card(l, i))}
+      </div>
+    );
+  }
+  if (view === "table") {
+    return (
+      <div className="space-y-1.5">
+        <div className="grid grid-cols-[auto_minmax(0,2.4fr)_minmax(0,1fr)_auto_auto_auto] items-center gap-3 px-3 h-8 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border/50">
+          <span></span>
+          <span>Title</span>
+          <span>Domain</span>
+          <span>Type</span>
+          <span className="hidden md:block">Status</span>
+          <span className="hidden lg:block">Saved</span>
+        </div>
+        {links.map((l, i) => card(l, i))}
+      </div>
+    );
+  }
+  if (view === "cover") {
+    return (
+      <div className="overflow-x-auto scrollbar-thin pb-4 -mx-6 px-6 snap-x snap-mandatory">
+        <div className="flex gap-4">
+          {links.map((l, i) => (
+            <div key={l.id} className="snap-start">
+              {card(l, i)}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return <div className="space-y-2">{links.map((l, i) => card(l, i))}</div>;
+}
 
 function VirtualLinkList({
   scrollParentRef, groups, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
