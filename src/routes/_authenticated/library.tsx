@@ -1282,9 +1282,12 @@ const LinkCard = memo(function LinkCard({
         {link.summary && <p className="text-xs text-muted-foreground line-clamp-2">{link.summary}</p>}
         <div className="flex items-center gap-1 mt-2 flex-wrap">
           {link.status === "pending" ? (
-            <span className="font-mono text-[10px] text-muted-foreground inline-flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" /> Analyzing…
-            </span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onRetry(); }}
+              className="font-mono text-[10px] text-primary inline-flex items-center gap-1 hover:underline"
+            >
+              <RefreshCw className="h-3 w-3" /> Analyze
+            </button>
           ) : link.status === "failed" ? (
             <span className="font-mono text-[10px] text-destructive inline-flex items-center gap-1">
               <AlertCircle className="h-3 w-3" /> Analysis failed
