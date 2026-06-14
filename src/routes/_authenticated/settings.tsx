@@ -79,7 +79,7 @@ function ChangePassword() {
   };
 
   return (
-    <section className="rounded-xl border border-border/60 bg-card/40 p-6">
+    <section data-card className="rounded-xl border border-border/60 p-6">
       <div className="flex items-start gap-3">
         <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
           <Lock className="h-5 w-5" />
@@ -163,7 +163,7 @@ function TelegramBots() {
   const bots = data?.bots ?? [];
 
   return (
-    <section className="rounded-xl border border-border/60 bg-card/40 p-6">
+    <section data-card className="rounded-xl border border-border/60 p-6">
       <div className="flex items-start gap-3">
         <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
           <Bot className="h-5 w-5" />
@@ -220,11 +220,11 @@ function TelegramBots() {
       <div className="mt-8 space-y-2">
         <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Connected bots</h4>
         {isLoading ? (
-          <div className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
+          <div data-card data-morph="paper" className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
             Loading…
           </div>
         ) : bots.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
+          <div data-card data-morph="paper" className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
             No bot connected yet.
           </div>
         ) : (
@@ -490,7 +490,7 @@ function BrowserExtension() {
   const tokens = data?.tokens ?? [];
 
   return (
-    <section className="rounded-xl border border-border/60 bg-card/40 p-6">
+    <section data-card className="rounded-xl border border-border/60 p-6">
       <div className="flex items-start gap-3">
         <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
           <Chrome className="h-5 w-5" />
@@ -550,9 +550,9 @@ function BrowserExtension() {
       <div className="mt-8 space-y-2">
         <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">API tokens</h4>
         {isLoading ? (
-          <div className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">Loading…</div>
+          <div data-card data-morph="paper" className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">Loading…</div>
         ) : tokens.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
+          <div data-card data-morph="paper" className="rounded-lg border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
             No tokens yet. Generate one to connect the extension.
           </div>
         ) : (
