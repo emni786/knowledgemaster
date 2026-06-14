@@ -256,6 +256,14 @@ function LibraryPage() {
     mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) => togglePin(id, pinned),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["links"] }),
   });
+  const retryMut = useMutation({
+    mutationFn: retryAnalysis,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["links"] });
+      toast.success("Analysis restarted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const handleAdd = useCallback((raw: string) => {
     const urls = Array.from(new Set(
@@ -539,6 +547,7 @@ function LibraryPage() {
                   selected={selected}
                   onSelect={handleSelectLink}
                   onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+                  onRetry={(id) => retryMut.mutate(id)}
                 />
               )}
             </div>
@@ -570,11 +579,12 @@ function LibraryPage() {
               <StatCard label="Pending" value={stats.pending} tone="muted" />
             </div>
             {linksQuery.isLoading ? <SkeletonList /> : visible.length === 0 ? <EmptyState /> : (
-              <VirtualFlatList
+            <VirtualFlatList
                 links={visible}
                 selected={selected}
                 onSelect={handleSelectLink}
                 onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+                onRetry={(id: string) => retryMut.mutate(id)}
               />
             )}
           </div>
@@ -951,7 +961,7 @@ type VRow =
   | { kind: "row"; key: string; items: LinkRow[]; offset: number };
 
 function VirtualLinkList({
-  scrollParentRef, groups, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin,
+  scrollParentRef, groups, view, showNumbers, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
 }: {
   scrollParentRef: React.RefObject<HTMLDivElement | null>;
   groups: Groups;
@@ -963,6 +973,7 @@ function VirtualLinkList({
   selected: string | null;
   onSelect: (id: string) => void;
   onPin: (id: string, p: boolean) => void;
+  onRetry: (id: string) => void;
 }) {
   const cols = useGridColCount(view);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
@@ -1091,6 +1102,7 @@ function VirtualLinkList({
                     selected={selected === l.id}
                     onSelect={() => onSelect(l.id)}
                     onPin={(p) => onPin(l.id, p)}
+                    onRetry={() => onRetry(l.id)}
                     selectMode={selectMode}
                     isChecked={selectedIds.has(l.id)}
                     onCheck={() => toggleSelected(l.id)}
@@ -1106,12 +1118,13 @@ function VirtualLinkList({
 }
 
 function VirtualFlatList({
-  links, selected, onSelect, onPin,
+  links, selected, onSelect, onPin, onRetry,
 }: {
   links: LinkRow[];
   selected: string | null;
   onSelect: (id: string) => void;
   onPin: (id: string, p: boolean) => void;
+  onRetry: (id: string) => void;
 }) {
   const linksRef = useRef(links);
   linksRef.current = links;
@@ -1162,6 +1175,7 @@ function VirtualFlatList({
               selected={selected === l.id}
               onSelect={() => onSelect(l.id)}
               onPin={(p) => onPin(l.id, p)}
+              onRetry={() => {}}
               selectMode={false}
               isChecked={false}
               onCheck={() => {}}
@@ -1174,11 +1188,12 @@ function VirtualFlatList({
 }
 
 function LinkGrid({
-  links, view, showNumbers, numberOffset, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin,
+  links, view, showNumbers, numberOffset, selectMode, selectedIds, toggleSelected, selected, onSelect, onPin, onRetry,
 }: {
   links: LinkRow[]; view: "list" | "grid"; showNumbers: boolean; numberOffset: number;
   selectMode: boolean; selectedIds: Set<string>; toggleSelected: (id: string) => void;
   selected: string | null; onSelect: (id: string) => void; onPin: (id: string, p: boolean) => void;
+  onRetry: (id: string) => void;
 }) {
   return (
     <div className={view === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" : "space-y-1.5"}>
@@ -1190,12 +1205,13 @@ function LinkGrid({
           view={view}
           showNumbers={showNumbers}
           selected={selected === l.id}
-          onSelect={() => onSelect(l.id)}
-          onPin={(p) => onPin(l.id, p)}
-          selectMode={selectMode}
-          isChecked={selectedIds.has(l.id)}
-          onCheck={() => toggleSelected(l.id)}
-        />
+              onSelect={() => onSelect(l.id)}
+              onPin={(p) => onPin(l.id, p)}
+              onRetry={() => {}}
+              selectMode={selectMode}
+              isChecked={selectedIds.has(l.id)}
+              onCheck={() => toggleSelected(l.id)}
+            />
       ))}
     </div>
   );
@@ -1204,11 +1220,12 @@ function LinkGrid({
 type LinkCardProps = {
   link: LinkRow; index: number; view: "list" | "grid"; showNumbers: boolean;
   selected: boolean; onSelect: () => void; onPin: (p: boolean) => void;
+  onRetry: () => void;
   selectMode: boolean; isChecked: boolean; onCheck: () => void;
 };
 
 const LinkCard = memo(function LinkCard({
-  link, index, view, showNumbers, selected, onSelect, onPin, selectMode, isChecked, onCheck,
+  link, index, view, showNumbers, selected, onSelect, onPin, onRetry, selectMode, isChecked, onCheck,
 }: LinkCardProps) {
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
@@ -1265,9 +1282,12 @@ const LinkCard = memo(function LinkCard({
         {link.summary && <p className="text-xs text-muted-foreground line-clamp-2">{link.summary}</p>}
         <div className="flex items-center gap-1 mt-2 flex-wrap">
           {link.status === "pending" ? (
-            <span className="font-mono text-[10px] text-muted-foreground inline-flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" /> Analyzing…
-            </span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onRetry(); }}
+              className="font-mono text-[10px] text-primary inline-flex items-center gap-1 hover:underline"
+            >
+              <RefreshCw className="h-3 w-3" /> Analyze
+            </button>
           ) : link.status === "failed" ? (
             <span className="font-mono text-[10px] text-destructive inline-flex items-center gap-1">
               <AlertCircle className="h-3 w-3" /> Analysis failed
@@ -1336,6 +1356,15 @@ const LinkCard = memo(function LinkCard({
         )}
       </div>
       <TypeIcon type={link.content_type} className="h-4 w-4 text-primary/70" />
+      {link.status === "pending" && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRetry(); }}
+          className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary"
+          title="Analyze"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+        </button>
+      )}
       <button
         onClick={(e) => { e.stopPropagation(); onPin(link.pinned); }}
         className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary"
