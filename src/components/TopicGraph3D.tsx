@@ -297,9 +297,22 @@ export function TopicGraph3D({
         controls.target?.set?.(0, 0, 0);
         controls.update?.();
       }
-      // Starfield background scene
       const scene = fg.scene?.();
-      if (scene && !scene.userData._starfield) {
+      if (!scene) return;
+      // Lighting — MeshStandardMaterial needs lights to show 3D shading
+      if (!scene.userData._lights) {
+        const ambient = new THREE.AmbientLight(0xffffff, 1.2);
+        scene.add(ambient);
+        const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+        dir.position.set(120, 80, 100);
+        scene.add(dir);
+        const back = new THREE.DirectionalLight(0xa5b4fc, 0.8);
+        back.position.set(-80, -60, -100);
+        scene.add(back);
+        scene.userData._lights = true;
+      }
+      // Starfield background scene
+      if (!scene.userData._starfield) {
         const starGeo = new THREE.BufferGeometry();
         const N = 1500;
         const arr = new Float32Array(N * 3);
