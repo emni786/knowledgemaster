@@ -225,7 +225,7 @@ function Stat({
     : tone === "muted" ? "text-muted-foreground"
     : "text-foreground";
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-4">
+    <div data-card data-morph="glass" className="rounded-2xl border border-border/60 p-4">
       <div className="flex items-center justify-between text-xs uppercase tracking-widest font-mono text-muted-foreground">
         <span>{label}</span>
         <Icon className={`h-4 w-4 ${toneCls}`} />
