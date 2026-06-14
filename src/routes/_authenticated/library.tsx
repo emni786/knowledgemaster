@@ -592,6 +592,12 @@ function LibraryPage() {
               <StatCard label="Ready" value={stats.ready} tone="primary" />
               <StatCard label="Pending" value={stats.pending} tone="muted" />
             </div>
+            {pendingIds.length > 0 && (
+              <Button variant="outline" size="sm" className="w-full h-9 font-mono text-xs gap-1.5" onClick={() => retryPendingMut.mutate()} disabled={retryPendingMut.isPending}>
+                {retryPendingMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                Analyze {pendingIds.length} pending
+              </Button>
+            )}
             {linksQuery.isLoading ? <SkeletonList /> : visible.length === 0 ? <EmptyState /> : (
             <VirtualFlatList
                 links={visible}
