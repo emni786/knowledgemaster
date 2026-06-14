@@ -16,16 +16,16 @@ const ForceGraph3D = lazy(() =>
   import("react-force-graph-3d").then((m) => ({ default: m.default as any }))
 ) as any;
 
-// Planet palette — 8 named tag groups
+// Element palette — 8 atomic "element" groups
 const PLANETS = [
-  { name: "Saturn Gold",    color: "#fbbf24", ring: "#f59e0b" },
-  { name: "Mars Red",       color: "#ef4444", ring: "#b91c1c" },
-  { name: "Pluto Purple",   color: "#a78bfa", ring: "#7c3aed" },
-  { name: "Uranus Cyan",    color: "#22d3ee", ring: "#0891b2" },
-  { name: "Neptune Blue",   color: "#3b82f6", ring: "#1d4ed8" },
-  { name: "Earth Green",    color: "#34d399", ring: "#059669" },
-  { name: "Jupiter Orange", color: "#fb923c", ring: "#ea580c" },
-  { name: "Venus Pink",     color: "#f472b6", ring: "#db2777" },
+  { name: "Hydrogen",  color: "#fbbf24", ring: "#f59e0b" },
+  { name: "Helium",    color: "#ef4444", ring: "#b91c1c" },
+  { name: "Lithium",   color: "#a78bfa", ring: "#7c3aed" },
+  { name: "Carbon",    color: "#22d3ee", ring: "#0891b2" },
+  { name: "Nitrogen",  color: "#3b82f6", ring: "#1d4ed8" },
+  { name: "Oxygen",    color: "#34d399", ring: "#059669" },
+  { name: "Neon",      color: "#fb923c", ring: "#ea580c" },
+  { name: "Argon",     color: "#f472b6", ring: "#db2777" },
 ];
 
 type GNode = {
@@ -40,54 +40,108 @@ type GNode = {
 };
 type GLink = { source: string; target: string; value: number };
 
-// Build a planet mesh: sphere + tilted ring + label sprite
+// Build an atom: nucleus (proton/neutron cluster) + orbital shells with animated electrons
 function buildPlanetObject(node: GNode, highlighted: boolean) {
   const group = new THREE.Group();
-  const radius = Math.max(2.5, Math.sqrt(node.count) * 2.5);
+  const nucleusR = Math.max(2.2, Math.sqrt(node.count) * 1.8);
 
   // Glow halo
   const haloMat = new THREE.SpriteMaterial({
     color: new THREE.Color(node.color),
-    opacity: highlighted ? 0.55 : 0.28,
+    opacity: highlighted ? 0.6 : 0.3,
     transparent: true,
     depthWrite: false,
   });
   const halo = new THREE.Sprite(haloMat);
-  halo.scale.set(radius * 4, radius * 4, 1);
+  halo.scale.set(nucleusR * 5, nucleusR * 5, 1);
   group.add(halo);
 
-  // Planet sphere
-  const sphereGeo = new THREE.SphereGeometry(radius, 24, 24);
-  const sphereMat = new THREE.MeshBasicMaterial({ color: node.color });
-  const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-  group.add(sphere);
+  // Nucleus = cluster of small spheres (protons + neutrons)
+  const particleCount = Math.min(14, 4 + Math.floor(node.count / 2));
+  for (let i = 0; i < particleCount; i++) {
+    const isProton = i % 2 === 0;
+    const r = nucleusR * 0.38;
+    const geo = new THREE.SphereGeometry(r, 12, 12);
+    const mat = new THREE.MeshBasicMaterial({
+      color: isProton ? node.color : "#e2e8f0",
+    });
+    const m = new THREE.Mesh(geo, mat);
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const rr = nucleusR * 0.55 * Math.cbrt(Math.random());
+    m.position.set(
+      rr * Math.sin(phi) * Math.cos(theta),
+      rr * Math.sin(phi) * Math.sin(theta),
+      rr * Math.cos(phi),
+    );
+    group.add(m);
+  }
 
-  // Orbital ring (one or two, count-based, brighter when more connections)
-  const ringCount = Math.min(2, 1 + Math.floor(node.count / 6));
-  for (let i = 0; i < ringCount; i++) {
-    const inner = radius * (1.6 + i * 0.5);
-    const outer = inner + Math.max(0.35, radius * 0.18);
-    const ringGeo = new THREE.RingGeometry(inner, outer, 64);
+  // Electron shells — orbital count scales with link count
+  const shellCount = Math.min(3, 1 + Math.floor(node.count / 5));
+  for (let s = 0; s < shellCount; s++) {
+    const orbitR = nucleusR * (2.4 + s * 1.2);
+
+    // Orbit path ring
+    const ringGeo = new THREE.RingGeometry(orbitR - 0.06, orbitR + 0.06, 96);
     const ringMat = new THREE.MeshBasicMaterial({
       color: node.ring,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: highlighted ? 0.95 : 0.55 + Math.min(0.35, node.count / 30),
+      opacity: highlighted ? 0.75 : 0.4,
+      depthWrite: false,
     });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2.4 + i * 0.25;
-    ring.rotation.y = i * 0.4;
-    group.add(ring);
+    const orbit = new THREE.Mesh(ringGeo, ringMat);
+    orbit.rotation.x = Math.PI / 2 + s * 0.6;
+    orbit.rotation.y = s * 0.9;
+    group.add(orbit);
+
+    // Electrons on this shell — animated via onBeforeRender
+    const pivot = new THREE.Group();
+    pivot.rotation.copy(orbit.rotation);
+    const electronsOnShell = Math.min(6, 1 + Math.floor(node.count / (s + 2)));
+    const speed = 0.6 + s * 0.25 + Math.random() * 0.2;
+    const phase0 = Math.random() * Math.PI * 2;
+    for (let e = 0; e < electronsOnShell; e++) {
+      const eGeo = new THREE.SphereGeometry(Math.max(0.6, nucleusR * 0.22), 10, 10);
+      const eMat = new THREE.MeshBasicMaterial({ color: "#e0f2fe" });
+      const electron = new THREE.Mesh(eGeo, eMat);
+      (electron as any).userData._orbit = {
+        r: orbitR,
+        offset: (e / electronsOnShell) * Math.PI * 2 + phase0,
+        speed,
+      };
+      // electron glow
+      const trailMat = new THREE.SpriteMaterial({
+        color: new THREE.Color("#7dd3fc"),
+        opacity: 0.7, transparent: true, depthWrite: false,
+      });
+      const trail = new THREE.Sprite(trailMat);
+      const ts = Math.max(1.4, nucleusR * 0.6);
+      trail.scale.set(ts, ts, 1);
+      electron.add(trail);
+      pivot.add(electron);
+    }
+    pivot.onBeforeRender = () => {
+      const t = performance.now() * 0.001;
+      pivot.children.forEach((c) => {
+        const d = (c as any).userData?._orbit;
+        if (!d) return;
+        const a = t * d.speed + d.offset;
+        c.position.set(Math.cos(a) * d.r, Math.sin(a) * d.r, 0);
+      });
+    };
+    group.add(pivot);
   }
 
   // Label
   const sprite = new SpriteText(node.label);
-  sprite.color = "#cbd5e1";
+  sprite.color = "#e2e8f0";
   sprite.backgroundColor = false as unknown as string;
-  sprite.textHeight = Math.max(2, radius * 0.55);
+  sprite.textHeight = Math.max(2, nucleusR * 0.7);
   sprite.fontFace = "Inter, ui-sans-serif, system-ui";
-  sprite.fontWeight = "500";
-  sprite.position.set(0, -radius * 2.6, 0);
+  sprite.fontWeight = "600";
+  sprite.position.set(0, -nucleusR * 3.4, 0);
   group.add(sprite);
 
   return group;
@@ -337,20 +391,22 @@ export function TopicGraph3D({
               linkColor={(l: any) => {
                 const id = (s: any) => (typeof s === "object" ? s.id : s);
                 const inPath = pathSet.has(id(l.source)) && pathSet.has(id(l.target));
-                return inPath ? "rgba(167,139,250,0.9)" : "rgba(148,163,184,0.25)";
+                return inPath ? "rgba(167,139,250,0.95)" : "rgba(186,230,253,0.45)";
               }}
               linkWidth={(l: any) => {
                 const id = (s: any) => (typeof s === "object" ? s.id : s);
                 const inPath = pathSet.has(id(l.source)) && pathSet.has(id(l.target));
-                return inPath ? 2.5 : Math.min(2, 0.4 + l.value * 0.4);
+                return inPath ? 3 : Math.min(2.5, 0.6 + l.value * 0.5);
               }}
-              linkOpacity={0.6}
+              linkOpacity={0.75}
+              linkLabel={(l: any) => `bond · ${l.value} shared link${l.value > 1 ? "s" : ""}`}
               linkDirectionalParticles={(l: any) => {
                 const id = (s: any) => (typeof s === "object" ? s.id : s);
-                return pathSet.has(id(l.source)) && pathSet.has(id(l.target)) ? 3 : 1;
+                return pathSet.has(id(l.source)) && pathSet.has(id(l.target)) ? 4 : 2;
               }}
-              linkDirectionalParticleWidth={(l: any) => Math.min(2, l.value * 0.5)}
-              linkDirectionalParticleSpeed={() => 0.005}
+              linkDirectionalParticleWidth={(l: any) => Math.min(2.2, 0.8 + l.value * 0.4)}
+              linkDirectionalParticleSpeed={() => 0.006}
+              linkDirectionalParticleColor={() => "#e0f2fe"}
               enableNodeDrag
               showNavInfo={false}
               onNodeHover={(n: any) => {
@@ -377,22 +433,29 @@ export function TopicGraph3D({
           </div>
         )}
 
-        {/* Cosmos legend */}
-        <aside className="pointer-events-none absolute top-3 right-3 w-[230px] rounded-xl border border-white/10 bg-black/60 backdrop-blur p-3 text-[11px] text-slate-200">
+        {/* Atomic legend */}
+        <aside className="pointer-events-none absolute top-3 right-3 w-[240px] rounded-xl border border-white/10 bg-black/60 backdrop-blur p-3 text-[11px] text-slate-200">
           <div className="flex items-center gap-1.5 font-mono uppercase tracking-widest text-[10px] text-amber-300">
-            <Sparkles className="h-3 w-3" /> Cosmos legend
+            <Sparkles className="h-3 w-3" /> Atomic legend
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Node Size = Link Count</div>
-            <div className="mt-1 flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-500" />
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-slate-400" />
-              <span className="inline-block h-3.5 w-3.5 rounded-full bg-slate-300" />
-              <span className="ml-1 text-slate-400">few → many</span>
-            </div>
+            <div className="font-semibold text-slate-100">Nucleus = Topic</div>
+            <div className="text-slate-400">Bigger nucleus = more links on that topic</div>
           </div>
           <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Color = Tag Group</div>
+            <div className="font-semibold text-slate-100">Electrons = Links</div>
+            <div className="text-slate-400">Orbiting around their parent topic</div>
+          </div>
+          <div className="mt-2.5">
+            <div className="font-semibold text-slate-100">Shells = Activity</div>
+            <div className="text-slate-400">More shells = more saved links</div>
+          </div>
+          <div className="mt-2.5">
+            <div className="font-semibold text-slate-100">Bonds = Relations</div>
+            <div className="text-slate-400">Topics appearing together on links</div>
+          </div>
+          <div className="mt-2.5">
+            <div className="font-semibold text-slate-100">Color = Element</div>
             <div className="mt-1 grid grid-cols-2 gap-y-1 gap-x-2">
               {PLANETS.map((p) => (
                 <div key={p.name} className="flex items-center gap-1.5">
@@ -402,15 +465,8 @@ export function TopicGraph3D({
               ))}
             </div>
           </div>
-          <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Rings = Connections</div>
-            <div className="text-slate-400">Brighter rings = more active</div>
-          </div>
-          <div className="mt-2.5">
-            <div className="font-semibold text-slate-100">Edges = Co-occurrence</div>
-            <div className="text-slate-400">Tags appearing together on links</div>
-          </div>
         </aside>
+
 
         {/* Bottom toolbar */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full border border-white/10 bg-black/60 backdrop-blur px-2 py-1.5 text-slate-200 text-xs">
