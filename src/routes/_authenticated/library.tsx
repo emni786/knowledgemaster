@@ -579,11 +579,12 @@ function LibraryPage() {
               <StatCard label="Pending" value={stats.pending} tone="muted" />
             </div>
             {linksQuery.isLoading ? <SkeletonList /> : visible.length === 0 ? <EmptyState /> : (
-              <VirtualFlatList
+            <VirtualFlatList
                 links={visible}
                 selected={selected}
                 onSelect={handleSelectLink}
                 onPin={(id, p) => pinMut.mutate({ id, pinned: !p })}
+                onRetry={(id: string) => retryMut.mutate(id)}
               />
             )}
           </div>
@@ -1100,6 +1101,7 @@ function VirtualLinkList({
                     selected={selected === l.id}
                     onSelect={() => onSelect(l.id)}
                     onPin={(p) => onPin(l.id, p)}
+                    onRetry={() => onRetry(l.id)}
                     selectMode={selectMode}
                     isChecked={selectedIds.has(l.id)}
                     onCheck={() => toggleSelected(l.id)}
