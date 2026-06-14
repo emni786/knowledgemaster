@@ -97,7 +97,7 @@ function LibraryPage() {
   const desktopScrollRef = useRef<HTMLDivElement | null>(null);
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [collapsed, setCollapsed] = useLocalStorage("xn:sidebar-collapsed", false);
-  const [view, setView] = useLocalStorage<"list" | "grid">("xn:view", "list");
+  const [view, setView] = useLocalStorage<LayoutMode>("xn:view", "list");
   const [showNumbers, setShowNumbers] = useLocalStorage("xn:numbers", false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [searchInput, setSearchInput] = useState("");
