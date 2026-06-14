@@ -43,36 +43,37 @@ type GLink = { source: string; target: string; value: number };
 // Build a planet: glowing sphere with Saturn-style tilted rings (one ring per ~5 links)
 function buildPlanetObject(node: GNode, highlighted: boolean) {
   const group = new THREE.Group();
-  const planetR = Math.max(2.2, Math.sqrt(node.count) * 1.8);
+  const planetR = Math.max(2.6, Math.sqrt(node.count) * 2.2);
 
-  // Outer atmospheric glow halo
+  // Subtle atmospheric glow halo (smaller so the sphere shape dominates)
   const haloMat = new THREE.SpriteMaterial({
     color: new THREE.Color(node.color),
-    opacity: highlighted ? 0.55 : 0.28,
+    opacity: highlighted ? 0.35 : 0.18,
     transparent: true,
     depthWrite: false,
   });
   const halo = new THREE.Sprite(haloMat);
-  halo.scale.set(planetR * 4.6, planetR * 4.6, 1);
+  halo.scale.set(planetR * 2.4, planetR * 2.4, 1);
   group.add(halo);
 
-  // Planet body — solid colored sphere
-  const planetGeo = new THREE.SphereGeometry(planetR, 32, 32);
-  const planetMat = new THREE.MeshBasicMaterial({ color: node.color });
+  // Planet body — shaded sphere with self-illumination so it looks 3D in space
+  const planetGeo = new THREE.SphereGeometry(planetR, 40, 40);
+  const planetMat = new THREE.MeshStandardMaterial({
+    color: node.color,
+    emissive: node.color,
+    emissiveIntensity: 0.45,
+    roughness: 0.35,
+    metalness: 0.55,
+  });
   const planet = new THREE.Mesh(planetGeo, planetMat);
   group.add(planet);
 
-  // Inner highlight for depth
-  const innerGlowMat = new THREE.SpriteMaterial({
-    color: new THREE.Color("#ffffff"),
-    opacity: 0.18,
-    transparent: true,
-    depthWrite: false,
-  });
-  const innerGlow = new THREE.Sprite(innerGlowMat);
-  innerGlow.scale.set(planetR * 1.6, planetR * 1.6, 1);
-  innerGlow.position.set(-planetR * 0.25, planetR * 0.25, planetR * 0.5);
-  group.add(innerGlow);
+  // Invisible hit sphere — much larger than the visual planet so dragging is easy
+  const hitGeo = new THREE.SphereGeometry(planetR * 3.2, 16, 16);
+  const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+  const hitMesh = new THREE.Mesh(hitGeo, hitMat);
+  hitMesh.userData._isHitArea = true;
+  group.add(hitMesh);
 
   // Saturn-style tilted rings — ring count scales with link count
   const ringCount = Math.min(3, 1 + Math.floor(node.count / 5));
@@ -83,12 +84,14 @@ function buildPlanetObject(node: GNode, highlighted: boolean) {
     const innerR = planetR * (1.8 + s * 0.55);
     const outerR = innerR + planetR * 0.35;
     const ringGeo = new THREE.RingGeometry(innerR, outerR, 96);
-    const ringMat = new THREE.MeshBasicMaterial({
+    const ringMat = new THREE.MeshStandardMaterial({
       color: node.ring,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: highlighted ? 0.85 : 0.55,
+      opacity: highlighted ? 0.75 : 0.45,
       depthWrite: false,
+      emissive: node.ring,
+      emissiveIntensity: 0.15,
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = tiltX;
@@ -105,7 +108,7 @@ function buildPlanetObject(node: GNode, highlighted: boolean) {
   sprite.textHeight = Math.max(2, planetR * 0.7);
   sprite.fontFace = "Inter, ui-sans-serif, system-ui";
   sprite.fontWeight = "600";
-  sprite.position.set(0, -planetR * 2.6, 0);
+  sprite.position.set(0, -planetR * 2.8, 0);
   group.add(sprite);
 
   return group;
@@ -294,9 +297,22 @@ export function TopicGraph3D({
         controls.target?.set?.(0, 0, 0);
         controls.update?.();
       }
-      // Starfield background scene
       const scene = fg.scene?.();
-      if (scene && !scene.userData._starfield) {
+      if (!scene) return;
+      // Lighting — MeshStandardMaterial needs lights to show 3D shading
+      if (!scene.userData._lights) {
+        const ambient = new THREE.AmbientLight(0xffffff, 1.2);
+        scene.add(ambient);
+        const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+        dir.position.set(120, 80, 100);
+        scene.add(dir);
+        const back = new THREE.DirectionalLight(0xa5b4fc, 0.8);
+        back.position.set(-80, -60, -100);
+        scene.add(back);
+        scene.userData._lights = true;
+      }
+      // Starfield background scene
+      if (!scene.userData._starfield) {
         const starGeo = new THREE.BufferGeometry();
         const N = 1500;
         const arr = new Float32Array(N * 3);
