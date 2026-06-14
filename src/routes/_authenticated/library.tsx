@@ -1163,7 +1163,7 @@ function VirtualFlatList({
 }) {
   const linksRef = useRef(links);
   linksRef.current = links;
-  const estimateSize = useCallback(() => 84, []);
+  const estimateSize = useCallback(() => 80, []);
   const getItemKey = useCallback((i: number) => linksRef.current[i].id, []);
   const virtualizer = useWindowVirtualizer({
     count: links.length,
