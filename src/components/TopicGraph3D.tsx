@@ -321,9 +321,8 @@ export function TopicGraph3D({
     try {
       fg.d3Force?.("charge")?.strength?.(-110);
       fg.d3Force?.("link")?.distance?.((l: any) => 40 + 80 / Math.max(1, l.value));
-      // Centering forces — keep the graph anchored at the origin so rotation/tilt always orbits the center.
-      const centeringStrength = 0.08;
-      fg.d3Force?.("x", (await import("d3-force-3d")).forceX(0).strength(centeringStrength));
+      // Strengthen the built-in center force so the graph always settles at the origin.
+      fg.d3Force?.("center")?.strength?.(1);
     } catch {}
     try {
       // Lock OrbitControls so the camera always orbits the scene origin — no panning off-center.
