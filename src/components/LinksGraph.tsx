@@ -148,15 +148,16 @@ export function LinksGraph({ links }: { links: LinkRow[] }) {
             cooldownTicks={120}
             d3VelocityDecay={0.3}
             nodeRelSize={4}
-            nodeVal={(n: GNode) => n.val}
-            nodeLabel={(n: GNode) => (n.kind === "hub" ? n.label : `${n.label}`)}
-            linkColor={(l: GLink) =>
-              l.kind === "spoke"
-                ? `hsla(${l.hue},55%,55%,0.22)`
-                : `hsla(${l.hue},70%,60%,0.45)`
-            }
-            linkWidth={(l: GLink) => (l.kind === "tag" ? 1.1 : 0.6)}
-            linkDirectionalParticles={(l: GLink) => (l.kind === "tag" ? 2 : 0)}
+            nodeVal={((n: unknown) => (n as GNode).val) as never}
+            nodeLabel={((n: unknown) => (n as GNode).label) as never}
+            linkColor={((l: unknown) => {
+              const k = l as GLink;
+              return k.kind === "spoke"
+                ? `hsla(${k.hue},55%,55%,0.22)`
+                : `hsla(${k.hue},70%,60%,0.45)`;
+            }) as never}
+            linkWidth={((l: unknown) => ((l as GLink).kind === "tag" ? 1.1 : 0.6)) as never}
+            linkDirectionalParticles={((l: unknown) => ((l as GLink).kind === "tag" ? 2 : 0)) as never}
             linkDirectionalParticleSpeed={0.008}
             linkDirectionalParticleWidth={1.6}
             onNodeHover={(n) => setHover((n as GNode) ?? null)}
@@ -164,7 +165,8 @@ export function LinksGraph({ links }: { links: LinkRow[] }) {
               const node = n as GNode;
               if (node.kind === "sat" && node.url) window.open(node.url, "_blank", "noopener,noreferrer");
             }}
-            nodeCanvasObject={(node: GNode & { x?: number; y?: number }, ctx, scale) => {
+            nodeCanvasObject={((nodeIn: unknown, ctx: CanvasRenderingContext2D, scale: number) => {
+              const node = nodeIn as GNode & { x?: number; y?: number };
               const x = node.x ?? 0;
               const y = node.y ?? 0;
               const r = node.kind === "hub" ? Math.sqrt(node.val) * 2.6 : 3.2;
