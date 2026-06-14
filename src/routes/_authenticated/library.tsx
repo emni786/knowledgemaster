@@ -1269,10 +1269,9 @@ function deriveMorph(id: string, index: number) {
   const h = hashStr(id || String(index));
   // index*3 offset guarantees adjacent items with similar hashes still diverge
   const style = MORPHS[(h + index * 3) % MORPHS.length];
-  const hue = h % 360;
-  const radius = 14 + ((h >> 3) % 5) * 4; // 14, 18, 22, 26, 30
-  const tilt = ((h >> 7) % 7) - 3; // -3..+3 deg subtle accent
-  return { style, hue, radius, tilt };
+  // Lightness step 0..4 → mapped to a narrow dark-grey band in CSS (no hue, no chroma)
+  const shade = (h >> 5) % 5;
+  return { style, shade };
 }
 
 const LinkCard = memo(function LinkCard({
