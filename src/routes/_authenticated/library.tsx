@@ -391,7 +391,7 @@ function LibraryPage() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="lib-morph min-h-screen bg-background text-foreground">
         {/* Mobile header */}
         <MobileHeader
           email={user?.email}
