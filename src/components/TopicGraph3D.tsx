@@ -378,29 +378,101 @@ export function TopicGraph3D({
         scene.add(back);
         scene.userData._lights = true;
       }
-      // Starfield background scene
+      // Dense, twinkling starfield + nebula sprites
       if (!scene.userData._starfield) {
         const starGeo = new THREE.BufferGeometry();
-        const N = 1500;
+        const N = 4000;
         const arr = new Float32Array(N * 3);
+        const colArr = new Float32Array(N * 3);
         for (let i = 0; i < N; i++) {
-          const r = 1500 + Math.random() * 1500;
+          const r = 1500 + Math.random() * 2500;
           const t = Math.random() * Math.PI * 2;
           const p = Math.acos(2 * Math.random() - 1);
           arr[i * 3] = r * Math.sin(p) * Math.cos(t);
           arr[i * 3 + 1] = r * Math.sin(p) * Math.sin(t);
           arr[i * 3 + 2] = r * Math.cos(p);
+          // Vary star color: warm gold, white, icy blue
+          const tint = Math.random();
+          if (tint < 0.2)      { colArr[i*3]=1; colArr[i*3+1]=0.85; colArr[i*3+2]=0.55; }
+          else if (tint < 0.5) { colArr[i*3]=0.7; colArr[i*3+1]=0.85; colArr[i*3+2]=1; }
+          else                 { colArr[i*3]=1; colArr[i*3+1]=1; colArr[i*3+2]=1; }
         }
         starGeo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+        starGeo.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
         const starMat = new THREE.PointsMaterial({
-          color: 0xffffff, size: 1.6, sizeAttenuation: true, transparent: true, opacity: 0.7,
+          size: 2.0, sizeAttenuation: true, transparent: true, opacity: 0.85,
+          vertexColors: true, depthWrite: false, blending: THREE.AdditiveBlending,
         });
         const stars = new THREE.Points(starGeo, starMat);
         scene.add(stars);
         scene.userData._starfield = stars;
+
+        // Nebula clouds — soft additive sprites in deep colors
+        const nebulaColors = [0x6b21a8, 0x1d4ed8, 0x0e7490, 0xbe185d];
+        // Generate a soft radial gradient texture once
+        const cnv = document.createElement("canvas");
+        cnv.width = cnv.height = 256;
+        const ctx = cnv.getContext("2d")!;
+        const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+        grad.addColorStop(0, "rgba(255,255,255,1)");
+        grad.addColorStop(0.4, "rgba(255,255,255,0.35)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 256, 256);
+        const nebTex = new THREE.CanvasTexture(cnv);
+        for (let i = 0; i < 14; i++) {
+          const mat = new THREE.SpriteMaterial({
+            map: nebTex,
+            color: nebulaColors[i % nebulaColors.length],
+            transparent: true,
+            opacity: 0.18,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+          });
+          const sp = new THREE.Sprite(mat);
+          const r = 800 + Math.random() * 1800;
+          const t = Math.random() * Math.PI * 2;
+          const p = Math.acos(2 * Math.random() - 1);
+          sp.position.set(
+            r * Math.sin(p) * Math.cos(t),
+            r * Math.sin(p) * Math.sin(t) * 0.6,
+            r * Math.cos(p),
+          );
+          const s = 800 + Math.random() * 1200;
+          sp.scale.set(s, s, 1);
+          scene.add(sp);
+        }
+      }
+
+      // Cinematic bloom via react-force-graph's exposed composer
+      if (!scene.userData._bloom && fg.postProcessingComposer) {
+        try {
+          const { UnrealBloomPass } = await import("three/examples/jsm/postprocessing/UnrealBloomPass.js");
+          const composer = fg.postProcessingComposer();
+          if (composer) {
+            const bloom = new UnrealBloomPass(
+              new THREE.Vector2(size.w, size.h),
+              0.85,  // strength
+              0.55,  // radius
+              0.08,  // threshold
+            );
+            composer.addPass(bloom);
+            scene.userData._bloom = true;
+          }
+        } catch {}
       }
     } catch {}
-  }, [mounted, displayNodes.length]);
+  }, [mounted, positionedNodes.length, size.w, size.h]);
+
+  const flyTo = (id: string) => {
+    const fg = fgRef.current;
+    if (!fg) return;
+    const n = (positionedNodes as any[]).find((x) => x.id === id);
+    if (!n || n.x == null) return;
+    const dist = 140;
+    const ratio = 1 + dist / Math.hypot(n.x, n.y, n.z || 0.001);
+    fg.cameraPosition({ x: n.x * ratio, y: n.y * ratio, z: (n.z || 0) * ratio }, n, 1200);
+  };
 
   const openLinks = openTag ? byTag.get(openTag) ?? [] : [];
 
