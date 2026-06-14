@@ -234,6 +234,7 @@ function DashboardPage() {
       )}
 
       {tab === "feeds" && <RssFeedsSection />}
+      </div>
     </AppShell>
   );
 }
