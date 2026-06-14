@@ -1279,8 +1279,7 @@ const LinkCard = memo(function LinkCard({
 }: LinkCardProps) {
   const morph = useMemo(() => deriveMorph(link.id, index), [link.id, index]);
   const morphStyle = {
-    ["--card-accent" as string]: String(morph.hue),
-    ["--card-radius" as string]: `${morph.radius}px`,
+    ["--card-shade" as string]: String(morph.shade),
   } as React.CSSProperties;
   const Icon = TYPE_ICON[link.content_type];
   const domain = link.domain || getDomain(link.url);
