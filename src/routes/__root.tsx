@@ -22,8 +22,8 @@ function NotFoundComponent() {
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist.
         </p>
-        <Link to="/library" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
-          Back to Library
+        <Link to="/dashboard" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          Back to Dashboard
         </Link>
       </div>
     </div>
