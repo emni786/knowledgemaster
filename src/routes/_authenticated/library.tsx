@@ -382,7 +382,7 @@ function LibraryPage() {
       }
       if (e.key === "/") { e.preventDefault(); searchRef.current?.focus(); }
       else if (e.key === "?") { e.preventDefault(); setShortcutsOpen(true); }
-      else if (e.key === "g") { e.preventDefault(); setView(view === "list" ? "grid" : "list"); }
+      else if (e.key === "g") { e.preventDefault(); setView(cycleLayout(view)); }
       else if (e.key === "Escape") { setSelected(null); setMobileDetailOpen(false); }
       else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
