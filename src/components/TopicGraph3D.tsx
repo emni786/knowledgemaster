@@ -130,7 +130,7 @@ export function TopicGraph3D({
   const [mounted, setMounted] = useState(false);
   const [openTag, setOpenTag] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [days, setDays] = useState<number>(365); // time travel window
+  const [days, setDays] = useState<number>(365);
   const [pathA, setPathA] = useState<string>("");
   const [pathB, setPathB] = useState<string>("");
   const [internalClusters, setInternalClusters] = useState(false);
@@ -140,6 +140,8 @@ export function TopicGraph3D({
     else setInternalClusters(v);
   };
   const [hoverHighlight, setHoverHighlight] = useState<Set<string>>(new Set());
+  type Mode = "cosmos" | "sphere" | "galaxy" | "atomic" | "flat";
+  const [mode, setMode] = useState<Mode>("cosmos");
 
   useEffect(() => setMounted(true), []);
 
