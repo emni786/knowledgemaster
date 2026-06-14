@@ -391,20 +391,22 @@ export function TopicGraph3D({
               linkColor={(l: any) => {
                 const id = (s: any) => (typeof s === "object" ? s.id : s);
                 const inPath = pathSet.has(id(l.source)) && pathSet.has(id(l.target));
-                return inPath ? "rgba(167,139,250,0.9)" : "rgba(148,163,184,0.25)";
+                return inPath ? "rgba(167,139,250,0.95)" : "rgba(186,230,253,0.45)";
               }}
               linkWidth={(l: any) => {
                 const id = (s: any) => (typeof s === "object" ? s.id : s);
                 const inPath = pathSet.has(id(l.source)) && pathSet.has(id(l.target));
-                return inPath ? 2.5 : Math.min(2, 0.4 + l.value * 0.4);
+                return inPath ? 3 : Math.min(2.5, 0.6 + l.value * 0.5);
               }}
-              linkOpacity={0.6}
+              linkOpacity={0.75}
+              linkLabel={(l: any) => `bond · ${l.value} shared link${l.value > 1 ? "s" : ""}`}
               linkDirectionalParticles={(l: any) => {
                 const id = (s: any) => (typeof s === "object" ? s.id : s);
-                return pathSet.has(id(l.source)) && pathSet.has(id(l.target)) ? 3 : 1;
+                return pathSet.has(id(l.source)) && pathSet.has(id(l.target)) ? 4 : 2;
               }}
-              linkDirectionalParticleWidth={(l: any) => Math.min(2, l.value * 0.5)}
-              linkDirectionalParticleSpeed={() => 0.005}
+              linkDirectionalParticleWidth={(l: any) => Math.min(2.2, 0.8 + l.value * 0.4)}
+              linkDirectionalParticleSpeed={() => 0.006}
+              linkDirectionalParticleColor={() => "#e0f2fe"}
               enableNodeDrag
               showNavInfo={false}
               onNodeHover={(n: any) => {
