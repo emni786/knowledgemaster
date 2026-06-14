@@ -223,6 +223,24 @@ function DashboardPage() {
               </ResponsiveContainer>
             </div>
           </section>
+function QuickLink({ to, icon: Icon, label, hint }: { to: string; icon: typeof Activity; label: string; hint?: string }) {
+  return (
+    <Link
+      to={to}
+      className="group rounded-2xl border border-border/60 bg-card/40 p-4 hover:border-primary/40 hover:bg-card/60 transition-colors flex flex-col gap-2"
+    >
+      <div className="flex items-center justify-between">
+        <Icon className="h-4 w-4 text-primary/70" />
+        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      <div>
+        <div className="text-sm font-medium">{label}</div>
+        {hint && <div className="text-[11px] font-mono text-muted-foreground truncate">{hint}</div>}
+      </div>
+    </Link>
+  );
+}
+
 
           <section className="space-y-3">
             <Header icon={Sparkles} title="Cosmos breakdown" subtitle="Top topics, edges, and group composition for your current graph." />
