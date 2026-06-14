@@ -1215,6 +1215,7 @@ function LinkGrid({
 type LinkCardProps = {
   link: LinkRow; index: number; view: "list" | "grid"; showNumbers: boolean;
   selected: boolean; onSelect: () => void; onPin: (p: boolean) => void;
+  onRetry: () => void;
   selectMode: boolean; isChecked: boolean; onCheck: () => void;
 };
 
