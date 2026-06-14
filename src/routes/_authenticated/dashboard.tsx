@@ -619,7 +619,7 @@ function CosmosStatsPanel({ stats, clusters }: { stats: CosmosStats; clusters: b
 
 function MiniStat({ icon: Icon, label, value }: { icon: typeof Activity; label: string; value: number | string }) {
   return (
-    <div className="rounded-xl border border-border/40 bg-background/40 p-3">
+    <div data-card data-morph="clay" className="rounded-xl border border-border/40 p-3">
       <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
         <Icon className="h-3 w-3" /> {label}
       </div>
