@@ -12,6 +12,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 function NotFoundComponent() {
   return (
