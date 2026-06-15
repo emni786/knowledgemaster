@@ -272,10 +272,13 @@ export const analyzeAndSaveLinks = createServerFn({ method: "POST" })
 
       // 3) Forward to Telegram bots
       try {
-        const { data: bots } = await supabase
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: bots } = await supabaseAdmin
           .from("telegram_bots")
           .select("bot_token, default_chat_id, active")
+          .eq("owner_id", userId)
           .eq("active", true);
+
         const targets = ((bots ?? []) as Array<{ bot_token: string; default_chat_id: number | null; active: boolean }>)
           .filter((b) => b.default_chat_id);
         if (targets.length) {
