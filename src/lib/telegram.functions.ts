@@ -96,14 +96,18 @@ export const testTelegramWebhook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabase = supabaseAdmin;
     const { data: row, error } = await supabase
       .from("telegram_bots" as never)
       .select("bot_token, webhook_secret, id")
       .eq("id", data.id)
+      .eq("owner_id", userId)
       .single();
     if (error || !row) throw new Error(error?.message || "Bot not found");
     const bot = row as unknown as { bot_token: string; webhook_secret: string; id: string };
+
 
     const host = getRequestHost();
     const expectedUrl = publicWebhookUrl(host, bot.id);
