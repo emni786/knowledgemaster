@@ -51,7 +51,8 @@ export const addTelegramBot = createServerFn({ method: "POST" })
       throw new Error(meJson.description || "Telegram rejected the token");
     }
 
-    const { data: row, error } = await supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
       .from("telegram_bots" as never)
       .insert({
         owner_id: userId,
@@ -61,6 +62,7 @@ export const addTelegramBot = createServerFn({ method: "POST" })
       } as never)
       .select("id, webhook_secret")
       .single();
+
     if (error) throw new Error(error.message);
     const created = row as unknown as { id: string; webhook_secret: string };
 
