@@ -289,12 +289,12 @@ export const Route = createFileRoute("/api/public/telegram/webhook/$botId")({
             url,
             normalized_url: norm,
             domain: dom,
-            content_type: detectType(url),
+            content_type: ai.content_type ?? detectType(url),
             status: "ready",
             source: "telegram",
             title: ai.title ?? dom ?? url,
             summary: ai.summary ?? `Saved from Telegram (${dom ?? "link"}).`,
-            tags: [],
+            tags: ai.tags,
             fetched_at: new Date().toISOString(),
           });
           if (!error) saved++;
