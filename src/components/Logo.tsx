@@ -1,13 +1,13 @@
-import { Sparkles } from "lucide-react";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 export function Logo({ size = 28, className = "" }: { size?: number; className?: string }) {
   return (
-    <div
-      className={`flex items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground ${className}`}
+    <img
+      src={logoAsset.url}
+      alt="Knowledgemaster"
+      className={`rounded-2xl object-cover ${className}`}
       style={{ width: size, height: size }}
-    >
-      <Sparkles className="h-1/2 w-1/2" strokeWidth={2.5} />
-    </div>
+    />
   );
 }
 
