@@ -63,10 +63,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Knowledgemaster — AI Link Librarian" },
       { name: "twitter:description", content: "Your AI-powered personal knowledge library. Save, tag, search, and rediscover every link that matters." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1ed4db5e-7118-4bc3-bfd3-92926ea17c8f/id-preview-f5fa4f3c--0320b183-aafd-475b-b3ae-4d955b1f3708.lovable.app-1778789161954.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1ed4db5e-7118-4bc3-bfd3-92926ea17c8f/id-preview-f5fa4f3c--0320b183-aafd-475b-b3ae-4d955b1f3708.lovable.app-1778789161954.png" },
+      { property: "og:image", content: `https://knowledgemaster.lovable.app${logoAsset.url}` },
+      { name: "twitter:image", content: `https://knowledgemaster.lovable.app${logoAsset.url}` },
     ],
     links: [
+      { rel: "icon", type: "image/png", href: logoAsset.url },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
