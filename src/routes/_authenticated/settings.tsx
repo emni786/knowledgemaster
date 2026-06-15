@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Bot, Loader2, Trash2, ExternalLink, Copy, Check, Activity, Chrome, Download, Plus, KeyRound, Lock, Upload, FileJson } from "lucide-react";
+import { ArrowLeft, Bot, Loader2, Trash2, ExternalLink, Copy, Check, Activity, Chrome, Download, Plus, KeyRound, Lock, Upload, FileJson, Mail, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
   importTelegramLinks,
 } from "@/lib/telegram.functions";
 import { createApiToken, listApiTokens, revokeApiToken } from "@/lib/api-tokens.functions";
+import { getEmailSubscription, saveEmailSubscription, sendTestDigest } from "@/lib/email-digest.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -41,6 +42,7 @@ function Page() {
           <h2 className="font-display text-3xl font-semibold">Settings</h2>
           <p className="mt-2 text-sm text-muted-foreground">Manage your Knowledgemaster account, integrations, and preferences.</p>
         </section>
+        <EmailDigest />
         <BrowserExtension />
         <TelegramBots />
         <ChangePassword />
