@@ -40,9 +40,127 @@ function detectType(url: string): string {
   return "article";
 }
 
-async function summarize(url: string): Promise<{ title: string | null; summary: string | null }> {
+function youtubeVideoId(u: string): string | null {
+  try {
+    const url = new URL(u);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "youtu.be") return url.pathname.slice(1).split("/")[0] || null;
+    if (host.endsWith("youtube.com") || host === "m.youtube.com") {
+      if (url.pathname === "/watch") return url.searchParams.get("v");
+      const m = url.pathname.match(/^\/(shorts|embed|live|v)\/([^/?#]+)/);
+      if (m) return m[2];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+}
+
+function extractMeta(html: string): { title: string; description: string; siteName: string } {
+  const pick = (re: RegExp) => html.match(re)?.[1]?.trim() ?? "";
+  const title =
+    pick(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ||
+    pick(/<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)["']/i) ||
+    pick(/<title[^>]*>([^<]+)<\/title>/i);
+  const description =
+    pick(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i) ||
+    pick(/<meta[^>]+name=["']twitter:description["'][^>]+content=["']([^"']+)["']/i) ||
+    pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+  const siteName = pick(/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["']/i);
+  return { title: decodeEntities(title), description: decodeEntities(description), siteName: decodeEntities(siteName) };
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function fetchPage(url: string): Promise<string> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch(url, {
+      redirect: "follow",
+      signal: ctrl.signal,
+      headers: {
+        "user-agent": "Mozilla/5.0 (compatible; KnowledgemasterBot/1.0; +https://knowledgemaster.lovable.app)",
+        accept: "text/html,application/xhtml+xml",
+      },
+    });
+    if (!res.ok) return "";
+    const ct = res.headers.get("content-type") ?? "";
+    if (!ct.includes("text/html") && !ct.includes("xml")) return "";
+    const text = await res.text();
+    return text.slice(0, 200_000);
+  } catch {
+    return "";
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function fetchYoutubeOEmbed(url: string): Promise<{ title: string; author: string } | null> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`, { signal: ctrl.signal });
+    if (!res.ok) return null;
+    const j = (await res.json()) as { title?: string; author_name?: string };
+    if (!j.title) return null;
+    return { title: j.title, author: j.author_name ?? "" };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function summarize(url: string): Promise<{ title: string | null; summary: string | null; tags: string[]; content_type: string | null }> {
   const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) return { title: null, summary: null };
+
+  const ytId = youtubeVideoId(url);
+  let meta = { title: "", description: "", siteName: "" };
+  let bodyText = "";
+
+  if (ytId) {
+    const oe = await fetchYoutubeOEmbed(url);
+    if (oe) {
+      meta = {
+        title: oe.title,
+        description: oe.author ? `YouTube video by ${oe.author}.` : "",
+        siteName: "YouTube",
+      };
+      bodyText = `YouTube video. Title: ${oe.title}. Channel: ${oe.author}. Video ID: ${ytId}.`;
+    }
+  } else {
+    const html = await fetchPage(url);
+    if (html) {
+      meta = extractMeta(html);
+      bodyText = stripHtml(html).slice(0, 4000);
+    }
+  }
+
+  if (!apiKey) {
+    return {
+      title: meta.title || null,
+      summary: meta.description || null,
+      tags: ytId ? ["youtube", "video"] : [],
+      content_type: ytId ? "video" : null,
+    };
+  }
+
   try {
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -56,23 +174,49 @@ async function summarize(url: string): Promise<{ title: string | null; summary: 
           {
             role: "system",
             content:
-              "You analyze URLs for a knowledge library. Reply with strict JSON only: {\"title\":\"...\",\"summary\":\"...\"}. Title <= 90 chars. Summary 1-2 sentences <= 240 chars.",
+              "You analyze URLs for a knowledge library. Reply with strict JSON only: {\"title\":\"...\",\"summary\":\"...\",\"tags\":[\"kebab-case\",\"3 to 6\"]}. Title <= 120 chars (specific, no marketing fluff). Summary 1-2 neutral sentences <= 280 chars covering what it is and why it matters. Tags are conceptual, reusable, lowercase kebab-case.",
           },
-          { role: "user", content: `URL: ${url}` },
+          {
+            role: "user",
+            content: JSON.stringify({
+              url,
+              og_title: meta.title.slice(0, 240),
+              og_description: meta.description.slice(0, 600),
+              site: meta.siteName.slice(0, 80),
+              body_excerpt: bodyText.slice(0, 3000),
+            }),
+          },
         ],
         response_format: { type: "json_object" },
       }),
     });
-    if (!res.ok) return { title: null, summary: null };
-    const json = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
+    if (!res.ok) {
+      return {
+        title: meta.title || null,
+        summary: meta.description || null,
+        tags: ytId ? ["youtube", "video"] : [],
+        content_type: ytId ? "video" : null,
+      };
+    }
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
     const raw = json.choices?.[0]?.message?.content ?? "{}";
-    const parsed = JSON.parse(raw) as { title?: string; summary?: string };
+    const parsed = JSON.parse(raw) as { title?: string; summary?: string; tags?: string[] };
+    const tags = Array.from(
+      new Set((parsed.tags ?? []).map((t) => t.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "")).filter(Boolean))
+    ).slice(0, 6);
     return {
-      title: parsed.title?.slice(0, 200) ?? null,
-      summary: parsed.summary?.slice(0, 1000) ?? null,
+      title: parsed.title?.slice(0, 200) ?? meta.title ?? null,
+      summary: parsed.summary?.slice(0, 1000) ?? meta.description ?? null,
+      tags: tags.length ? tags : ytId ? ["youtube", "video"] : [],
+      content_type: ytId ? "video" : null,
     };
   } catch {
-    return { title: null, summary: null };
+    return {
+      title: meta.title || null,
+      summary: meta.description || null,
+      tags: ytId ? ["youtube", "video"] : [],
+      content_type: ytId ? "video" : null,
+    };
   }
 }
 
