@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Bot, Loader2, Trash2, ExternalLink, Copy, Check, Activity, Chrome, Download, Plus, KeyRound, Lock, Upload, FileJson } from "lucide-react";
+import { ArrowLeft, Bot, Loader2, Trash2, ExternalLink, Copy, Check, Activity, Chrome, Download, Plus, KeyRound, Lock, Upload, FileJson, Mail, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
   importTelegramLinks,
 } from "@/lib/telegram.functions";
 import { createApiToken, listApiTokens, revokeApiToken } from "@/lib/api-tokens.functions";
+import { getEmailSubscription, saveEmailSubscription, sendTestDigest } from "@/lib/email-digest.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -41,6 +42,7 @@ function Page() {
           <h2 className="font-display text-3xl font-semibold">Settings</h2>
           <p className="mt-2 text-sm text-muted-foreground">Manage your Knowledgemaster account, integrations, and preferences.</p>
         </section>
+        <EmailDigest />
         <BrowserExtension />
         <TelegramBots />
         <ChangePassword />
@@ -587,6 +589,132 @@ function BrowserExtension() {
           </ul>
         )}
       </div>
+    </section>
+  );
+}
+
+function EmailDigest() {
+  const qc = useQueryClient();
+  const get = useServerFn(getEmailSubscription);
+  const save = useServerFn(saveEmailSubscription);
+  const test = useServerFn(sendTestDigest);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["email-subscription"],
+    queryFn: () => get(),
+  });
+
+  const [email, setEmail] = useState("");
+  const [frequency, setFrequency] = useState<"off" | "weekly" | "monthly">("weekly");
+  const [hydrated, setHydrated] = useState(false);
+
+  if (!hydrated && data) {
+    setHydrated(true);
+    setEmail(data.subscription?.email ?? data.defaultEmail ?? "");
+    setFrequency((data.subscription?.frequency as "off" | "weekly" | "monthly" | undefined) ?? "weekly");
+  }
+
+  const saveMut = useMutation({
+    mutationFn: () => save({ data: { email: email.trim(), frequency } }),
+    onSuccess: () => {
+      toast.success(frequency === "off" ? "Digest paused" : `Saved — ${frequency} digest will be sent to ${email}`);
+      qc.invalidateQueries({ queryKey: ["email-subscription"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const testMut = useMutation({
+    mutationFn: () => test(),
+    onSuccess: (res) => {
+      if (res.sent) toast.success(`Test digest sent — based on ${res.count} link${res.count === 1 ? "" : "s"} from the past week.`);
+      else toast.warning(`Not sent: ${res.reason ?? "unknown"}. Save your email first.`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const lastSent = data?.subscription?.last_sent_at;
+
+  return (
+    <section data-card className="rounded-xl border border-border/60 p-6">
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+          <Mail className="h-5 w-5" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-display text-lg font-semibold">Email digest</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Get an AI-written summary of everything you saved, delivered to your inbox. Choose weekly, monthly, or pause anytime.
+          </p>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="mt-6 h-24 animate-pulse rounded-lg border border-dashed border-border/60" />
+      ) : (
+        <form
+          className="mt-6 space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!email.trim()) return toast.error("Enter an email address");
+            saveMut.mutate();
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor="digest_email" className="text-xs uppercase tracking-wide text-muted-foreground">Send digest to</Label>
+            <Input
+              id="digest_email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Frequency</Label>
+            <div className="flex flex-wrap gap-2">
+              {(["weekly", "monthly", "off"] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFrequency(f)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                    frequency === f
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border/60 bg-background/60 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {f === "off" ? "Pause" : f}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="submit" disabled={saveMut.isPending}>
+              {saveMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save preferences"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={testMut.isPending || !data?.subscription}
+              onClick={() => testMut.mutate()}
+              className="gap-2"
+            >
+              {testMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Send test now
+            </Button>
+            {lastSent && (
+              <span className="ml-auto font-mono text-[11px] text-muted-foreground">
+                Last sent {new Date(lastSent).toLocaleString()}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Delivered via Resend. Weekly digests cover the last 7 days, monthly the last 30.
+          </p>
+        </form>
+      )}
     </section>
   );
 }

@@ -19,6 +19,7 @@ import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDigestRouteImport } from './routes/_authenticated/digest'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as ApiPublicHooksSendDigestsRouteImport } from './routes/api/public/hooks/send-digests'
 import { Route as ApiPublicExtensionSaveRouteImport } from './routes/api/public/extension/save'
 import { Route as ApiPublicTelegramWebhookBotIdRouteImport } from './routes/api/public/telegram/webhook.$botId'
 
@@ -71,6 +72,12 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicHooksSendDigestsRoute =
+  ApiPublicHooksSendDigestsRouteImport.update({
+    id: '/api/public/hooks/send-digests',
+    path: '/api/public/hooks/send-digests',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicExtensionSaveRoute = ApiPublicExtensionSaveRouteImport.update({
   id: '/api/public/extension/save',
   path: '/api/public/extension/save',
@@ -94,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof AuthenticatedLibraryRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/public/extension/save': typeof ApiPublicExtensionSaveRoute
+  '/api/public/hooks/send-digests': typeof ApiPublicHooksSendDigestsRoute
   '/api/public/telegram/webhook/$botId': typeof ApiPublicTelegramWebhookBotIdRoute
 }
 export interface FileRoutesByTo {
@@ -107,6 +115,7 @@ export interface FileRoutesByTo {
   '/library': typeof AuthenticatedLibraryRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/public/extension/save': typeof ApiPublicExtensionSaveRoute
+  '/api/public/hooks/send-digests': typeof ApiPublicHooksSendDigestsRoute
   '/api/public/telegram/webhook/$botId': typeof ApiPublicTelegramWebhookBotIdRoute
 }
 export interface FileRoutesById {
@@ -122,6 +131,7 @@ export interface FileRoutesById {
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/public/extension/save': typeof ApiPublicExtensionSaveRoute
+  '/api/public/hooks/send-digests': typeof ApiPublicHooksSendDigestsRoute
   '/api/public/telegram/webhook/$botId': typeof ApiPublicTelegramWebhookBotIdRoute
 }
 export interface FileRouteTypes {
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/settings'
     | '/api/public/extension/save'
+    | '/api/public/hooks/send-digests'
     | '/api/public/telegram/webhook/$botId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/settings'
     | '/api/public/extension/save'
+    | '/api/public/hooks/send-digests'
     | '/api/public/telegram/webhook/$botId'
   id:
     | '__root__'
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
     | '/_authenticated/library'
     | '/_authenticated/settings'
     | '/api/public/extension/save'
+    | '/api/public/hooks/send-digests'
     | '/api/public/telegram/webhook/$botId'
   fileRoutesById: FileRoutesById
 }
@@ -173,6 +186,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicExtensionSaveRoute: typeof ApiPublicExtensionSaveRoute
+  ApiPublicHooksSendDigestsRoute: typeof ApiPublicHooksSendDigestsRoute
   ApiPublicTelegramWebhookBotIdRoute: typeof ApiPublicTelegramWebhookBotIdRoute
 }
 
@@ -248,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/hooks/send-digests': {
+      id: '/api/public/hooks/send-digests'
+      path: '/api/public/hooks/send-digests'
+      fullPath: '/api/public/hooks/send-digests'
+      preLoaderRoute: typeof ApiPublicHooksSendDigestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/extension/save': {
       id: '/api/public/extension/save'
       path: '/api/public/extension/save'
@@ -293,6 +314,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicExtensionSaveRoute: ApiPublicExtensionSaveRoute,
+  ApiPublicHooksSendDigestsRoute: ApiPublicHooksSendDigestsRoute,
   ApiPublicTelegramWebhookBotIdRoute: ApiPublicTelegramWebhookBotIdRoute,
 }
 export const routeTree = rootRouteImport
