@@ -180,11 +180,13 @@ export const deleteTelegramBot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
-    const { data: row } = await supabase
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
       .from("telegram_bots" as never)
       .select("bot_token")
       .eq("id", data.id)
+      .eq("owner_id", userId)
       .single();
     const token = (row as unknown as { bot_token?: string } | null)?.bot_token;
     if (token) {
@@ -193,6 +195,7 @@ export const deleteTelegramBot = createServerFn({ method: "POST" })
     const { error } = await supabase.from("telegram_bots" as never).delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+
   });
 
 function normalizeUrl(url: string): string {
