@@ -43,6 +43,8 @@ export const addTelegramBot = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    void supabase;
+
 
     // Validate token via getMe
     const meRes = await fetch(`${TG_API}/bot${data.bot_token}/getMe`);
